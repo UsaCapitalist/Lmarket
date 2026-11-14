@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lmarket · سفته دیجیتال</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b0f1a; --panel:rgba(255,255,255,.04); --line:rgba(255,255,255,.09);
+    --text:#e8ecf6; --muted:#8a94ad;
+    --alice:#22d3ee; --bob:#a78bfa; --ok:#34d399; --warn:#fbbf24; --bad:#f87171;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--text);font-family:"Vazirmatn",system-ui,sans-serif;min-height:100%}
+  body{
+    background:
+      radial-gradient(900px 500px at 10% -10%,rgba(34,211,238,.18),transparent 60%),
+      radial-gradient(800px 500px at 110% 10%,rgba(167,139,250,.18),transparent 60%),
+      var(--bg);
+    padding:28px 16px 60px;
+  }
+  .wrap{max-width:980px;margin:0 auto}
+  header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,var(--alice),var(--bob));display:grid;place-items:center;font-weight:800;color:#0b0f1a;box-shadow:0 10px 30px rgba(167,139,250,.35)}
+  h1{font-size:20px;margin:0;font-weight:800}
+  .sub{color:var(--muted);font-size:13px;margin-top:2px}
+  .net{font-size:12px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--muted);display:flex;align-items:center;gap:8px}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--warn);box-shadow:0 0 12px var(--warn)}
+  .dot.on{background:var(--ok);box-shadow:0 0 12px var(--ok)}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:22px;backdrop-filter:blur(14px);box-shadow:0 20px 60px rgba(0,0,0,.35)}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:760px){.grid{grid-template-columns:1fr}}
+  .full{grid-column:1/-1}
+
+  label{display:block;font-size:12px;color:var(--muted);margin:0 0 6px}
+  input{
+    width:100%;padding:12px 14px;border-radius:14px;border:1px solid var(--line);
+    background:rgba(0,0,0,.35);color:var(--text);font:inherit;font-size:14px;direction:ltr;text-align:left
+  }
+  input:focus{outline:none;border-color:var(--alice);box-shadow:0 0 0 4px rgba(34,211,238,.15)}
+  .row{display:flex;gap:10px;align-items:end;flex-wrap:wrap}
+  .row>*{flex:1;min-width:160px}
+
+  button{
+    font:inherit;font-weight:600;cursor:pointer;border:0;border-radius:14px;padding:12px 18px;color:#0b0f1a;
+    background:linear-gradient(135deg,#7dd3fc,#c4b5fd);transition:transform .15s,box-shadow .15s,opacity .15s
+  }
+  button:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(125,211,252,.25)}
+  button:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+  button.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
+  button.alice{background:linear-gradient(135deg,var(--alice),#0ea5e9)}
+  button.bob{background:linear-gradient(135deg,var(--bob),#7c3aed);color:#fff}
+
+  /* role switch */
+  .roles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px}
+  .role{padding:14px;border-radius:16px;border:1px solid var(--line);background:rgba(0,0,0,.25);cursor:pointer;text-align:right;color:var(--text);font-weight:600}
+  .role small{display:block;color:var(--muted);font-weight:400;margin-top:4px;font-size:12px}
+  .role.active.alice{border-color:var(--alice);box-shadow:0 0 0 3px rgba(34,211,238,.15) inset}
+  .role.active.bob{border-color:var(--bob);box-shadow:0 0 0 3px rgba(167,139,250,.18) inset}
+  .avatar{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:50%;font-size:12px;margin-left:6px;color:#0b0f1a;font-weight:800}
+  .avatar.a{background:var(--alice)} .avatar.b{background:var(--bob)}
+
+  /* timeline */
+  .steps{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;position:relative;margin:8px 0 4px}
+  .steps::before{content:"";position:absolute;top:19px;right:10%;left:10%;height:2px;background:var(--line);z-index:0}
+  .steps .fill{position:absolute;top:19px;right:10%;height:2px;background:linear-gradient(90deg,var(--alice),var(--bob));z-index:1;transition:width .6s ease;width:0}
+  .step{position:relative;z-index:2;text-align:center;font-size:12px;color:var(--muted)}
+  .step .c{width:40px;height:40px;margin:0 auto 8px;border-radius:50%;display:grid;place-items:center;background:#0f1424;border:2px solid var(--line);font-weight:800;transition:.4s}
+  .step.done .c{border-color:var(--ok);color:var(--ok);box-shadow:0 0 18px rgba(52,211,153,.35)}
+  .step.now .c{border-color:var(--alice);color:var(--alice);box-shadow:0 0 22px rgba(34,211,238,.45);animation:pulse 1.8s infinite}
+  .step.done,.step.now{color:var(--text)}
+  @keyframes pulse{50%{box-shadow:0 0 6px rgba(34,211,238,.2)}}
+
+  /* collateral vault */
+  .vaults{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:6px}
+  .vault{border-radius:18px;padding:16px;border:1px dashed var(--line);background:rgba(0,0,0,.25);position:relative;overflow:hidden}
+  .vault h3{margin:0 0 6px;font-size:14px;display:flex;align-items:center;gap:6px}
+  .amount{font-size:26px;font-weight:800;direction:ltr;text-align:right;letter-spacing:.5px}
+  .amount span{font-size:12px;color:var(--muted);font-weight:400;margin-right:6px}
+  .lock{display:inline-flex;align-items:center;gap:6px;font-size:12px;margin-top:8px;padding:4px 10px;border-radius:999px;background:rgba(251,191,36,.12);color:var(--warn)}
+  .lock.released{background:rgba(52,211,153,.12);color:var(--ok)}
+  .fillbar{position:absolute;bottom:0;right:0;left:0;height:0;background:linear-gradient(0deg,rgba(34,211,238,.18),transparent);transition:height .8s ease}
+  .vault.bobv .fillbar{background:linear-gradient(0deg,rgba(167,139,250,.2),transparent)}
+
+  .hint{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.8}
+  .status{margin-top:14px;padding:12px 14px;border-radius:14px;background:rgba(0,0,0,.3);border:1px solid var(--line);font-size:13px;display:flex;gap:10px;align-items:center}
+  .status .i{font-size:16px}
+
+  /* log */
+  .logbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px;flex-wrap:wrap}
+  .logbar h2{margin:0;font-size:15px}
+  .log{max-height:340px;overflow:auto;display:flex;flex-direction:column;gap:8px;padding-left:4px}
+  .entry{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:start;padding:10px 12px;border-radius:14px;background:rgba(0,0,0,.28);border:1px solid var(--line);font-size:13px;animation:in .4s ease}
+  @keyframes in{from{opacity:0;transform:translateY(-6px)}}
+  .tag{font-size:11px;padding:3px 8px;border-radius:999px;font-weight:600;white-space:nowrap}
+  .t-info{background:rgba(125,211,252,.12);color:#7dd3fc}
+  .t-ok{background:rgba(52,211,153,.12);color:var(--ok)}
+  .t-warn{background:rgba(251,191,36,.12);color:var(--warn)}
+  .t-err{background:rgba(248,113,113,.12);color:var(--bad)}
+  .msg{line-height:1.7}
+  .time{font-size:11px;color:var(--muted);direction:ltr;white-space:nowrap}
+  .empty{color:var(--muted);text-align:center;padding:30px 0;font-size:13px}
+  .mono{direction:ltr;font-family:ui-monospace,Menlo,monospace;font-size:12px;color:#c7d2fe;word-break:break-all}
+  footer{margin-top:22px;text-align:center;color:var(--muted);font-size:11px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <div class="logo">L</div>
+      <div>
+        <h1>Lmarket · سفته دیجیتال</h1>
+        <div class="sub">معامله شخص به شخص با وثیقه‌ی متقابل، بدون نیاز به اعتماد</div>
+      </div>
+    </div>
+    <div class="net"><span class="dot" id="netDot"></span><span id="netText">حالت نمایشی — متصل نیست</span></div>
+  </header>
+
+  <div class="grid">
+
+    <!-- Contract + role -->
+    <section class="card full">
+      <div class="row" style="margin-bottom:16px">
+        <div>
+          <label>آدرس / شناسه‌ی قرارداد هوشمند</label>
+          <input id="appId" placeholder="مثلاً 123456789" spellcheck="false">
+        </div>
+        <button id="loadBtn" class="ghost" style="flex:0 0 auto">بارگذاری قرارداد</button>
+        <button id="walletBtn" style="flex:0 0 auto">اتصال کیف پول</button>
+      </div>
+
+      <label>نقش شما در این معامله</label>
+      <div class="roles">
+        <button class="role alice active" data-role="alice">
+          <span class="avatar a">A</span>فروشنده · Alice
+          <small>کالا را می‌فرستد و کد دریافت وجه را ثبت می‌کند</small>
+        </button>
+        <button class="role bob" data-role="bob">
+          <span class="avatar b">B</span>خریدار · Bob
+          <small>وجه را می‌پردازد و کد دریافت کالا را ثبت می‌کند</small>
+        </button>
+      </div>
+    </section>
+
+    <!-- Progress -->
+    <section class="card full">
+      <div class="logbar">
+        <h2>مرحله‌ی معامله</h2>
+        <span class="sub" id="stateName">—</span>
+      </div>
+      <div class="steps" id="steps">
+        <div class="fill" id="fill"></div>
+        <div class="step" data-i="0"><div class="c">1</div>ایجاد قرارداد</div>
+        <div class="step" data-i="1"><div class="c">2</div>قفل وثیقه‌ها</div>
+        <div class="step" data-i="2"><div class="c">3</div>پرداخت و تحویل</div>
+        <div class="step" data-i="3"><div class="c">4</div>تأیید متقابل</div>
+        <div class="step" data-i="4"><div class="c">5</div>تسویه</div>
+      </div>
+    </section>
+
+    <!-- Vaults -->
+    <section class="card">
+      <h2 style="margin:0 0 12px;font-size:15px">وثیقه‌ی Alice</h2>
+      <div class="vault" id="vA">
+        <div class="fillbar" id="fA"></div>
+        <h3><span class="avatar a">A</span>قفل‌شده در قرارداد</h3>
+        <div class="amount" id="amtA">0<span>ALGO</span></div>
+        <span class="lock" id="lockA">🔒 قفل</span>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 style="margin:0 0 12px;font-size:15px">وثیقه‌ی Bob</h2>
+      <div class="vault bobv" id="vB">
+        <div class="fillbar" id="fB"></div>
+        <h3><span class="avatar b">B</span>قفل‌شده در قرارداد</h3>
+        <div class="amount" id="amtB">0<span>ALGO</span></div>
+        <span class="lock" id="lockB">🔒 قفل</span>
+      </div>
+    </section>
+
+    <!-- Actions -->
+    <section class="card full">
+      <h2 id="actTitle" style="margin:0 0 14px;font-size:15px">اقدام شما</h2>
+      <div class="row">
+        <div>
+          <label id="codeLabel">کد تأیید</label>
+          <input id="code" placeholder="کدی که از طرف مقابل دریافت کرده‌اید" spellcheck="false">
+        </div>
+        <button id="submitBtn" class="alice" style="flex:0 0 auto">ثبت تأیید</button>
+      </div>
+      <div class="hint" id="hintText"></div>
+      <div class="status" id="statusBox"><span class="i">ℹ️</span><span id="statusText">قرارداد هنوز بارگذاری نشده است.</span></div>
+    </section>
+
+    <!-- Log -->
+    <section class="card full">
+      <div class="logbar">
+        <h2>سابقه و لاگ عملیات</h2>
+        <div style="display:flex;gap:8px">
+          <button class="ghost" id="exportBtn">خروجی JSON</button>
+          <button class="ghost" id="clearBtn">پاک‌سازی</button>
+        </div>
+      </div>
+      <div class="log" id="log"><div class="empty">هنوز عملیاتی ثبت نشده است.</div></div>
+    </section>
+
+  </div>
+
+  <footer>Lmarket · بدون سرور · قابل اجرا از فایل محلی، GitHub Pages یا Cloudflare Workers</footer>
+</div>
+
+<script>
+/* ===================== CONFIG (همه‌ی تنظیمات اینجاست) ===================== */
+const CONFIG = {
+  network: "testnet",                                  // testnet | mainnet
+  algodUrl: "https://testnet-api.algonode.cloud",      // نود Algorand
+  algodPort: "",
+  algodToken: "",
+  explorer: "https://testnet.explorer.perawallet.app/application/",
+  demo: true,                                          // true = شبیه‌سازی بدون بلاکچین
+  unit: "ALGO",
+  decimals: 6,
+};
+
+/* ===================== STATE ===================== */
+const STATES = ["created","locked","shipped_paid","confirming","settled"];
+const SAMPLE = { state:0, collA:0, collB:0, confA:false, confB:false };
+let role = "alice";
+let contract = null;   // {appId, state, collA, collB, confA, confB}
+let logItems = JSON.parse(localStorage.getItem("lmarket_log") || "[]");
+
+/* ===================== HELPERS ===================== */
+const $ = id => document.getElementById(id);
+const fmt = n => (Number(n)/10**CONFIG.decimals).toLocaleString("en-US",{maximumFractionDigits:CONFIG.decimals});
+const now = () => new Date().toLocaleTimeString("en-GB",{hour12:false});
+
+function log(type, msg, extra){
+  const label = {info:"اطلاع",ok:"موفق",warn:"هشدار",err:"خطا"}[type];
+  logItems.unshift({ts:Date.now(), type, label, msg, extra: extra||""});
+  logItems = logItems.slice(0,300);
+  localStorage.setItem("lmarket_log", JSON.stringify(logItems));
+  renderLog();
+}
+function renderLog(){
+  const box = $("log");
+  if(!logItems.length){ box.innerHTML = '<div class="empty">هنوز عملیاتی ثبت نشده است.</div>'; return; }
+  box.innerHTML = logItems.map(l=>`
+    <div class="entry">
+      <span class="tag t-${l.type}">${l.label}</span>
+      <div class="msg">${escapeHtml(l.msg)}${l.extra?`<div class="mono">${escapeHtml(l.extra)}</div>`:""}</div>
+      <span class="time">${new Date(l.ts).toLocaleString("en-GB",{hour12:false})}</span>
+    </div>`).join("");
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+
+/* ===================== RENDER ===================== */
+function render(){
+  if(!contract){
+    $("stateName").textContent = "—";
+    ["amtA","amtB"].forEach(id=>$(id).innerHTML = `0<span>${CONFIG.unit}</span>`);
+    $("steps").querySelectorAll(".step").forEach(s=>s.className="step");
+    $("fill").style.width="0";
+    $("fA").style.height="0"; $("fB").style.height="0";
+    return;
+  }
+  const c = contract;
+  const names = ["ایجاد قرارداد","قفل وثیقه‌ها","پرداخت و تحویل","تأیید متقابل","تسویه شده"];
+  $("stateName").textContent = names[c.state];
+
+  $("steps").querySelectorAll(".step").forEach((s,i)=>{
+    s.className = "step" + (i < c.state ? " done" : i === c.state ? " now" : "");
+    s.querySelector(".c").textContent = i < c.state ? "✓" : (i+1);
+  });
+  $("fill").style.width = (c.state/(STATES.length-1)*84) + "%";
+
+  $("amtA").innerHTML = `${fmt(c.collA)}<span>${CONFIG.unit}</span>`;
+  $("amtB").innerHTML = `${fmt(c.collB)}<span>${CONFIG.unit}</span>`;
+  const ratioA = c.collA ? 100 : 0, ratioB = c.collB ? 100 : 0;
+  $("fA").style.height = ratioA+"%"; $("fB").style.height = ratioB+"%";
+
+  const released = c.state === 4;
+  $("lockA").className = "lock" + (released?" released":"");
+  $("lockB").className = "lock" + (released?" released":"");
+  $("lockA").textContent = released ? "🔓 آزاد شد" : "🔒 قفل";
+  $("lockB").textContent = released ? "🔓 آزاد شد" : "🔒 قفل";
+
+  renderActions();
+}
+
+function renderActions(){
+  const c = contract;
+  const roleLabel = role==="alice" ? "Alice (فروشنده)" : "Bob (خریدار)";
+  $("actTitle").textContent = `اقدام ${roleLabel}`;
+  let hint="", label="کد تأیید", btn="ثبت تأیید", disabled=false, status="";
+
+  if(!c){ disabled=true; status="ابتدا قرارداد را بارگذاری کنید."; }
+  else if(c.state===0){
+    disabled=true; status="منتظر قفل وثیقه‌ی هر دو طرف است.";
+    hint = "هر دو طرف باید دقیقاً همان مقدار وثیقه را قفل کنند. قرارداد مقدار را تعیین نمی‌کند.";
+  } else if(c.state===1){
+    if(role==="bob"){ label="کد دریافت کالا (از Alice)"; btn="ثبت کد دریافت کالا"; hint="پس از دریافت کالا، کد را از فروشنده بگیرید و وارد کنید."; status="منتظر پرداخت و ارسال کالا (خارج از بلاکچین)."; }
+    else { label="کد دریافت وجه (از Bob)"; btn="ثبت کد دریافت وجه"; hint="پس از دریافت وجه، کد را از خریدار بگیرید و وارد کنید."; status="منتظر ارسال کالا و پرداخت وجه (خارج از بلاکچین)."; }
+  } else if(c.state===2 || c.state===3){
+    label = role==="bob" ? "کد دریافت کالا (از Alice)" : "کد دریافت وجه (از Bob)";
+    btn = "ثبت تأیید";
+    const mine = role==="bob" ? c.confB : c.confA;
+    if(mine){ disabled=true; status="تأیید شما ثبت شده؛ منتظر طرف مقابل."; }
+    else status="کد تأیید طرف مقابل را وارد کنید تا وثیقه‌ها آزاد شوند.";
+    hint="وثیقه‌ها تنها پس از ثبت هر دو تأیید آزاد می‌شوند. اگر طرف مقابل تأیید نکند، وثیقه‌ی شما قفل می‌ماند.";
+  } else {
+    disabled=true; status="معامله تسویه شد و وثیقه‌ها آزاد شدند.";
+  }
+
+  $("codeLabel").textContent = label;
+  $("submitBtn").textContent = btn;
+  $("submitBtn").disabled = disabled;
+  $("submitBtn").className = role==="alice" ? "alice" : "bob";
+  $("hintText").textContent = hint;
+  $("statusText").textContent = status;
+}
+
+/* ===================== ACTIONS (فعلاً شبیه‌سازی) ===================== */
+function setNet(on, text){
+  $("netDot").className = "dot" + (on?" on":"");
+  $("netText").textContent = text;
+}
+
+$("loadBtn").onclick = async () => {
+  const id = $("appId").value.trim();
+  if(!id){ log("warn","شناسه‌ی قرارداد وارد نشده است."); return; }
+  try{
+    if(CONFIG.demo){
+      contract = {appId:id, ...SAMPLE};
+      setNet(false,"حالت نمایشی — بدون اتصال به بلاکچین");
+      log("info", `قرارداد ${id} در حالت نمایشی بارگذاری شد.`);
+    } else {
+      // TODO: خواندن global state از algod (algosdk) و decode کلیدها
+      throw new Error("اتصال واقعی به بلاکچین هنوز فعال نشده است.");
+    }
+    render();
+  }catch(e){ log("err", e.message); }
+};
+
+$("walletBtn").onclick = () => {
+  // TODO: اتصال Pera / Defly با @txnlab/use-wallet یا Pera Connect
+  log("warn","اتصال کیف پول هنوز پیاده‌سازی نشده است (نمایشی).");
+  setNet(false,"کیف پول متصل نیست (نمایشی)");
+};
+
+$("submitBtn").onclick = () => {
+  const code = $("code").value.trim();
+  if(!contract) return;
+  if(!code){ log("warn","کد تأیید وارد نشده است."); return; }
+
+  const c = contract;
+  if(c.state===1){
+    // نمایشی: هر دو طرف قفل کرده‌اند
+    c.state = 2;
+    log("ok", `${role==="alice"?"Alice":"Bob"} کد را ثبت کرد. مرحله‌ی پرداخت و تحویل آغاز شد.`, `code: ${code}`);
+  } else if(c.state===2 || c.state===3){
+    if(role==="bob") c.confB = true; else c.confA = true;
+    log("ok", `تأیید ${role==="alice"?"Alice":"Bob"} ثبت شد.`, `code: ${code}`);
+    if(c.confA && c.confB){
+      c.state = 4;
+      log("ok","هر دو تأیید ثبت شد؛ وثیقه‌ها آزاد شدند.");
+    } else c.state = 3;
+  }
+  $("code").value="";
+  render();
+};
+
+$("exportBtn").onclick = () => {
+  const blob = new Blob([JSON.stringify({contract, log: logItems}, null, 2)],{type:"application/json"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `lmarket-log-${Date.now()}.json`;
+  a.click();
+};
+$("clearBtn").onclick = () => {
+  if(!confirm("کل لاگ پاک شود؟")) return;
+  logItems = []; localStorage.removeItem("lmarket_log"); renderLog();
+};
+
+document.querySelectorAll(".role").forEach(b=>b.onclick=()=>{
+  role = b.dataset.role;
+  document.querySelectorAll(".role").forEach(x=>x.classList.toggle("active", x===b));
+  renderActions();
+});
+
+/* ===================== INIT ===================== */
+renderLog();
+render();
+</script>
+</body>
+</html>
