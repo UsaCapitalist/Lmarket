@@ -1,0 +1,896 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'">
+<title>Lmarket · سفته دیجیتال</title>
+<style>
+  :root{
+    --bg:#0b0f1a; --panel:rgba(255,255,255,.04); --line:rgba(255,255,255,.09);
+    --text:#e8ecf6; --muted:#8a94ad;
+    --buyer:#a78bfa; --seller:#22d3ee; --ok:#34d399; --warn:#fbbf24; --bad:#f87171;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--text);font-family:Vazirmatn,"Segoe UI",Tahoma,system-ui,sans-serif;min-height:100%}
+  body{background:radial-gradient(900px 500px at 10% -10%,rgba(34,211,238,.16),transparent 60%),radial-gradient(800px 500px at 110% 10%,rgba(167,139,250,.16),transparent 60%),var(--bg);padding:28px 16px 60px}
+  .wrap{max-width:1000px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,var(--seller),var(--buyer));display:grid;place-items:center;font-weight:800;color:#0b0f1a;box-shadow:0 10px 30px rgba(167,139,250,.35)}
+  h1{font-size:20px;margin:0;font-weight:800} h2{margin:0;font-size:15px;font-weight:800} h3{margin:0 0 6px;font-size:14px}
+  .sub{color:var(--muted);font-size:13px;margin-top:2px;line-height:1.7}
+  .net{font-size:12px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--muted);display:flex;align-items:center;gap:8px;direction:ltr}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--warn);box-shadow:0 0 12px var(--warn)}
+  .dot.on{background:var(--ok);box-shadow:0 0 12px var(--ok)} .dot.off{background:var(--bad);box-shadow:0 0 12px var(--bad)}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:22px;backdrop-filter:blur(14px);box-shadow:0 20px 60px rgba(0,0,0,.35)}
+  .cardhead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:760px){.grid2{grid-template-columns:1fr}}
+  label{display:block;font-size:12px;color:var(--muted);margin:0 0 6px}
+  input,select{width:100%;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:rgba(0,0,0,.35);color:var(--text);font:inherit;font-size:14px;direction:ltr;text-align:left}
+  select{direction:rtl;text-align:right}
+  input:focus,select:focus{outline:none;border-color:var(--seller);box-shadow:0 0 0 4px rgba(34,211,238,.15)}
+  input.rtl{direction:rtl;text-align:right}
+  .row{display:flex;gap:10px;align-items:end;flex-wrap:wrap} .row>.grow{flex:1;min-width:160px}
+  button{font:inherit;font-weight:600;cursor:pointer;border:0;border-radius:14px;padding:11px 16px;color:#0b0f1a;background:linear-gradient(135deg,#7dd3fc,#c4b5fd);transition:transform .15s,box-shadow .15s,opacity .15s}
+  button:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 10px 24px rgba(125,211,252,.25)}
+  button:disabled{opacity:.35;cursor:not-allowed}
+  button.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
+  button.small{padding:6px 11px;font-size:12px;border-radius:10px}
+  button.seller{background:linear-gradient(135deg,var(--seller),#0ea5e9)}
+  button.buyer{background:linear-gradient(135deg,var(--buyer),#7c3aed);color:#fff}
+  button.danger{background:linear-gradient(135deg,#fb7185,#ef4444);color:#fff}
+  .roles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+  .role{padding:14px;border-radius:16px;border:1px solid var(--line);background:rgba(0,0,0,.25);text-align:right;color:var(--text);font-weight:600;font-size:14px}
+  .role small{display:block;color:var(--muted);font-weight:400;margin-top:4px;font-size:12px;line-height:1.6}
+  .role.active.buyer{border-color:var(--buyer);box-shadow:0 0 0 3px rgba(167,139,250,.18) inset}
+  .role.active.seller{border-color:var(--seller);box-shadow:0 0 0 3px rgba(34,211,238,.15) inset}
+  .divider{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px;margin:18px 0}
+  .divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--line)}
+  .banner{padding:12px 16px;border-radius:14px;font-size:13px;line-height:1.8;border:1px solid}
+  .banner.err{background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.5);color:#fecaca}
+  .banner.warn{background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.45);color:#fde68a}
+  .banner.ok{background:rgba(52,211,153,.08);border-color:rgba(52,211,153,.35);color:#a7f3d0}
+  .banner.info{background:rgba(125,211,252,.08);border-color:rgba(125,211,252,.3);color:#bae6fd}
+  .kvs{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  @media(max-width:760px){.kvs{grid-template-columns:1fr 1fr}}
+  .kv{background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:14px;padding:10px 12px;min-width:0}
+  .kv .k{font-size:11px;color:var(--muted)} .kv .v{font-size:14px;font-weight:600;margin-top:4px;word-break:break-all}
+  .addr{direction:ltr;unicode-bidi:isolate;font-family:ui-monospace,Menlo,monospace;font-size:12px;word-break:break-all;color:#c7d2fe;display:block;text-align:left;line-height:1.7}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .chip{font-size:11px;padding:3px 9px;border-radius:999px;background:rgba(255,255,255,.06);color:var(--muted)}
+  .chip.ok{background:rgba(52,211,153,.12);color:var(--ok)} .chip.warn{background:rgba(251,191,36,.13);color:var(--warn)} .chip.bad{background:rgba(248,113,113,.14);color:var(--bad)}
+  .trust{margin-top:12px;padding:14px;border-radius:16px;border:1px solid var(--line);background:rgba(0,0,0,.25)}
+  .trust .big2{font-size:20px;font-weight:800;direction:ltr;text-align:right;margin-top:6px}
+  .trust .big2 span{font-size:12px;color:var(--muted);font-weight:400;margin-right:6px}
+  .trust .rowline{display:flex;justify-content:space-between;gap:10px;font-size:13px;margin-top:6px;flex-wrap:wrap}
+  .trust .rowline b{direction:ltr}
+  .stages{display:flex;flex-direction:column;gap:10px}
+  .stage{padding:14px;border-radius:16px;border:1px solid var(--line);background:rgba(0,0,0,.25)}
+  .stage .top{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center}
+  .stage .n{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-weight:800;border:2px solid var(--line);color:var(--muted)}
+  .stage .t{font-weight:700;font-size:14px} .stage .d{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.8}
+  .stage.done{opacity:.75} .stage.done .n{border-color:var(--ok);color:var(--ok);background:rgba(52,211,153,.1)}
+  .stage.ready{border-color:var(--seller);box-shadow:0 0 0 3px rgba(34,211,238,.1)} .stage.ready .n{border-color:var(--seller);color:var(--seller)}
+  .stage.ready.buyer{border-color:var(--buyer);box-shadow:0 0 0 3px rgba(167,139,250,.12)} .stage.ready.buyer .n{border-color:var(--buyer);color:var(--buyer)}
+  .stage.wait{opacity:.5}
+  .stage .body{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line)}
+  .tag{font-size:11px;padding:4px 10px;border-radius:999px;white-space:nowrap}
+  .tag.ok{background:rgba(52,211,153,.12);color:var(--ok)} .tag.wait{background:rgba(255,255,255,.06);color:var(--muted)} .tag.now{background:rgba(34,211,238,.12);color:var(--seller)}
+  .codebox{margin-top:12px;padding:12px 14px;border-radius:14px;background:rgba(52,211,153,.08);border:1px dashed rgba(52,211,153,.5);font-size:13px}
+  .codebox .c{font-family:ui-monospace,Menlo,monospace;font-size:13px;direction:ltr;text-align:left;letter-spacing:1px;color:var(--ok);margin:8px 0;word-break:break-all;line-height:1.8;user-select:all}
+  .vaults{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:760px){.vaults{grid-template-columns:1fr}}
+  .vault{border-radius:18px;padding:16px;border:1px dashed var(--line);background:rgba(0,0,0,.25);position:relative;overflow:hidden}
+  .vault .rows{display:grid;gap:6px;margin-top:10px;font-size:13px}
+  .vault .rows div{display:flex;justify-content:space-between;gap:10px} .vault .rows b{direction:ltr}
+  .big{font-size:24px;font-weight:800;direction:ltr;text-align:right}
+  .big span{font-size:12px;color:var(--muted);font-weight:400;margin-right:6px}
+  .lock{display:inline-flex;gap:6px;font-size:12px;margin-top:8px;padding:4px 10px;border-radius:999px;background:rgba(251,191,36,.12);color:var(--warn)}
+  .lock.released{background:rgba(52,211,153,.12);color:var(--ok)} .lock.empty{background:rgba(255,255,255,.06);color:var(--muted)}
+  .timer{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .log{max-height:360px;overflow:auto;display:flex;flex-direction:column;gap:8px}
+  .entry{display:grid;grid-template-columns:auto auto 1fr auto;gap:10px;align-items:start;padding:10px 12px;border-radius:14px;background:rgba(0,0,0,.28);border:1px solid var(--line);font-size:13px}
+  .ltag{font-size:11px;padding:3px 8px;border-radius:999px;font-weight:600;white-space:nowrap}
+  .t-info{background:rgba(125,211,252,.12);color:#7dd3fc} .t-ok{background:rgba(52,211,153,.12);color:var(--ok)} .t-warn{background:rgba(251,191,36,.12);color:var(--warn)} .t-err{background:rgba(248,113,113,.12);color:var(--bad)}
+  .src{font-size:10px;padding:3px 7px;border-radius:8px;border:1px solid var(--line);color:var(--muted)} .src.chain{color:#a7f3d0;border-color:rgba(52,211,153,.4)}
+  .msg{line-height:1.7} .time{font-size:11px;color:var(--muted);direction:ltr;white-space:nowrap}
+  .mono{direction:ltr;font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#c7d2fe;word-break:break-all;margin-top:4px;text-align:left}
+  .empty{color:var(--muted);text-align:center;padding:26px 0;font-size:13px}
+  .mine{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .mine button{display:flex;justify-content:space-between;gap:10px;text-align:right;background:rgba(0,0,0,.25);color:var(--text);border:1px solid var(--line);font-weight:500;font-size:13px}
+  .modal{position:fixed;inset:0;background:rgba(3,6,14,.78);display:grid;place-items:center;padding:16px;z-index:50;overflow:auto}
+  .sheet{width:min(560px,100%);background:#10162a;border:1px solid var(--line);border-radius:22px;padding:22px;box-shadow:0 30px 90px rgba(0,0,0,.6)}
+  .sheet ul{margin:10px 0 14px;padding:0 18px 0 0;line-height:2;font-size:14px}
+  .steps{display:flex;gap:6px;margin-bottom:12px} .steps i{flex:1;height:5px;border-radius:5px;background:var(--line)} .steps i.on{background:var(--warn)}
+  .check{display:flex;gap:10px;align-items:flex-start;margin:12px 0;font-size:13px;line-height:1.8;cursor:pointer}
+  .check input{width:18px;height:18px;margin-top:4px;flex:0 0 auto;direction:ltr}
+  .tbl{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0} .tbl td{padding:7px 4px;border-bottom:1px solid var(--line)} .tbl td:last-child{direction:ltr;text-align:left;font-weight:600}
+  .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);padding:12px 18px;border-radius:14px;background:#10162a;border:1px solid var(--line);font-size:13px;z-index:70;max-width:90vw}
+  .toast.err{border-color:var(--bad)} .toast.ok{border-color:var(--ok)}
+  .busy{position:sticky;top:8px;z-index:20}
+  details.dev{border:1px dashed rgba(251,191,36,.4);border-radius:18px;padding:12px 16px;background:rgba(251,191,36,.04)}
+  details.dev summary{cursor:pointer;font-weight:700;font-size:13px;color:var(--warn)}
+  footer{text-align:center;color:var(--muted);font-size:11px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo">L</div>
+      <div><h1>Lmarket · سفته دیجیتال</h1><div class="sub">معامله‌ی شخص به شخص با وثیقه‌ی متقابل · قرارداد خنثی است و داوری نمی‌کند</div></div>
+    </div>
+    <div class="net" id="net"><span class="dot" id="netDot"></span><span id="netText">…</span></div>
+  </header>
+
+  <div id="banners" style="display:flex;flex-direction:column;gap:10px"></div>
+  <div id="busy" class="busy"></div>
+
+  <section class="card" id="walletCard"></section>
+  <section class="card" id="startCard"></section>
+  <section id="contractArea" style="display:none;flex-direction:column;gap:18px"></section>
+
+  <section class="card">
+    <div class="cardhead">
+      <div><h2>سابقه و لاگ عملیات</h2><div class="sub">ردیف‌های «زنجیره» از بلاکچین خوانده می‌شوند و معتبرند؛ ردیف‌های «محلی» فقط یادداشت همین مرورگرند.</div></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="ghost small" id="exportBtn">خروجی JSON</button>
+        <button class="ghost small" id="clearBtn">پاک‌سازی کش محلی</button>
+      </div>
+    </div>
+    <div class="log" id="log"></div>
+  </section>
+
+  <details class="dev" id="dev">
+    <summary>ابزار آزمایش شبیه‌ساز (فقط حالت نمایشی)</summary>
+    <div class="sub" style="margin:10px 0">این بخش در نسخه‌ی واقعی وجود ندارد. برای آزمودن زمان، قطع شبکه، تراکنش گم‌شده و قرارداد مخرب است.</div>
+    <div class="row" style="margin-bottom:10px" id="devTime"></div>
+    <div class="row" id="devFaults"></div>
+  </details>
+
+  <footer>Lmarket · رابط نمایشی روی شبیه‌ساز Algorand · هیچ پول واقعی در کار نیست</footer>
+</div>
+
+<div id="modalRoot"></div>
+<div id="toastRoot"></div>
+
+<script>
+"use strict";
+/* ============================ CONFIG ============================ */
+const CONFIG = {
+  sim: true,                       // false در نسخه‌ی واقعی: ابزار آزمایش و کیف پول دمو حذف می‌شود
+  api: "",                         // هم‌مبدأ با سرور شبیه‌ساز
+  // کلید عمومی ناشر قرارداد؛ ثابت و داخل خود رابط (نه از سرور). قرارداد غیر از این امضا مجاز نیست.
+  publisher: "6babe7512efc8568b1f0ac783506d2b63e0782328ce315795e4602e8f848d2dc",
+  pollMs: 1500,
+  staleMs: 10000,
+  txTimeoutMs: 90000,
+  unit: "ALGO",
+  logKey: "lmarket_log_v3",
+  walletKey: "lmarket_wallet_v3",
+  longDealDays: 30,                // مهلت بلندتر از این مقدار برای فروشنده نشانه‌ی منفی است
+};
+
+/* ============================ STATE ============================ */
+const S = {
+  params: null, wallets: [], wallet: null, balance: null,
+  appId: null, app: null, events: [], reps: {}, mine: [],
+  release: {ok:false, reason:"هنوز بررسی نشده", releases:[]},
+  offline:false, lastOk:0, inflight:null, busyMsg:"",
+  pickRole:"buyer", acked:{}, codes:{}, lastCode:null,
+  form:{cp:"",col:"",value:"",days:"7",note:""},
+  cpInfo:null,      // {valid, address, ..., balance} برای طرف مقابل فرم ساخت
+  cpState:"idle",   // idle | loading | ready | error
+  localLog: [],
+};
+try{ S.localLog = JSON.parse(localStorage.getItem(CONFIG.logKey)||"[]"); }catch(_){ S.localLog=[]; }
+
+/* ============================ HELPERS ============================ */
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const U = 1_000_000;
+function fmtAlgo(m){ m=Number(m||0); const s=(m/U).toFixed(6).replace(/0+$/,"").replace(/\.$/,""); return s||"0"; }
+function algoToMicro(str){ str=String(str||"").trim(); if(!/^\d+(\.\d{1,6})?$/.test(str)) return null; const [a,b=""]=str.split("."); const v=Number(a)*U+Number((b+"000000").slice(0,6)); return Number.isSafeInteger(v)?v:null; }
+function fmtDur(sec){ sec=Math.abs(Math.floor(sec)); const d=Math.floor(sec/86400), h=Math.floor(sec%86400/3600), m=Math.floor(sec%3600/60); if(d) return `${d} روز و ${h} ساعت`; if(h) return `${h} ساعت و ${m} دقیقه`; return `${m} دقیقه`; }
+function fmtTs(ts){ return ts ? new Date(ts*1000).toLocaleString("en-GB",{hour12:false}) : "—"; }
+const chainNow = () => S.params ? S.params.now : Math.floor(Date.now()/1000);
+const roleFa = r => r==="buyer" ? "خریدار (Bob)" : "فروشنده (Alice)";
+const hex2u8 = h => Uint8Array.from(h.match(/../g).map(x=>parseInt(x,16)));
+function addrBlock(a){ return a ? `<span class="addr" title="${esc(a)}">${esc(a)}</span>` : "—"; }
+function copyText(t){ try{ navigator.clipboard.writeText(t); toast("کپی شد","ok"); }catch(_){ toast("کپی ممکن نشد؛ متن را دستی انتخاب کنید","err"); } }
+
+function toast(msg, kind){
+  const el = document.createElement("div"); el.className="toast "+(kind||""); el.textContent = msg;
+  $("toastRoot").appendChild(el); setTimeout(()=>el.remove(), 4200);
+}
+function addLocal(type, msg, extra){
+  const label={info:"اطلاع",ok:"موفق",warn:"هشدار",err:"خطا"}[type];
+  S.localLog.unshift({ts:chainNow(), wall:Date.now(), type, label, msg, extra:extra||"", appId:S.appId||null, who:S.wallet?.name||null});
+  S.localLog = S.localLog.slice(0,400);
+  try{ localStorage.setItem(CONFIG.logKey, JSON.stringify(S.localLog)); }catch(_){}
+  renderLog();
+}
+
+/* ============================ API ============================ */
+async function api(path, body){
+  const ctl = new AbortController(); const t = setTimeout(()=>ctl.abort(), 6000);
+  try{
+    const opt = body!==undefined ? {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body),signal:ctl.signal} : {signal:ctl.signal};
+    const r = await fetch(CONFIG.api+path, opt);
+    const data = await r.json().catch(()=>({error:"پاسخ نامعتبر از گره"}));
+    if(r.status===503){ S.offline=true; throw Object.assign(new Error("گره در دسترس نیست"),{net:true}); }
+    S.offline=false; S.lastOk=Date.now();
+    if(!r.ok) throw new Error(data.error||("خطای "+r.status));
+    return data;
+  }catch(e){
+    if(e.name==="AbortError"||e instanceof TypeError){ S.offline=true; throw Object.assign(new Error("ارتباط با گره برقرار نشد"),{net:true}); }
+    throw e;
+  }finally{ clearTimeout(t); }
+}
+
+/* ============================ بررسی امضا و نسخه‌ی قرارداد ============================ */
+async function verifyRelease(){
+  try{
+    if(!(window.crypto && crypto.subtle)) throw new Error("مرورگر WebCrypto ندارد");
+    const m = await (await fetch(CONFIG.api+"/release.json",{cache:"no-store"})).json();
+    if(m.publisher !== CONFIG.publisher) throw new Error("کلید ناشرِ اعلام‌شده با کلید ثابتِ رابط نمی‌خواند");
+    let key;
+    try{ key = await crypto.subtle.importKey("raw", hex2u8(m.publisher), {name:"Ed25519"}, false, ["verify"]); }
+    catch(_){ throw new Error("مرورگر شما Ed25519 را پشتیبانی نمی‌کند؛ مرورگر را به‌روز کنید"); }
+    const good=[];
+    for(const r of m.releases){
+      const msg = new TextEncoder().encode(`LMARKET-RELEASE|${r.version}|${r.approval_hash}`);
+      if(await crypto.subtle.verify({name:"Ed25519"}, key, hex2u8(r.sig), msg)) good.push(r);
+    }
+    if(!good.length) throw new Error("هیچ نسخه‌ای با امضای معتبر ناشر پیدا نشد");
+    S.release = {ok:true, reason:"", releases:good};
+  }catch(e){ S.release = {ok:false, reason:e.message, releases:[]}; }
+}
+function checkApp(app){
+  if(!app || !app.exists) return {ok:false, reason:"قرارداد وجود ندارد"};
+  if(!S.release.ok) return {ok:false, reason:"بررسی امضای ناشر ناموفق بود: "+S.release.reason};
+  const v = app.state.version;
+  const r = S.release.releases.find(r=>r.version===v && r.approval_hash===app.approval_hash);
+  if(!r) return {ok:false, reason:`برنامه‌ی این قرارداد (${app.approval_hash.slice(0,12)}…، نسخه‌ی ادعایی ${v}) با هیچ نسخه‌ی امضاشده‌ی ناشر نمی‌خواند`};
+  return {ok:true, version:v, hash:app.approval_hash};
+}
+
+/* ============================ اعتبار طرف‌ها ============================ */
+function repChips(r){
+  if(!r || !r.valid) return `<span class="chip bad">آدرس نامعتبر</span>`;
+  const c=[];
+  if(r.wallet_age_days===null) c.push(`<span class="chip warn">این آدرس هنوز در زنجیره دیده نشده</span>`);
+  else c.push(`<span class="chip ${r.wallet_age_days<30?"warn":"ok"}">${r.wallet_age_days<30?"کیف پول تازه · ":"سن کیف پول · "}${r.wallet_age_days} روز</span>`);
+  if(r.total===0) c.push(`<span class="chip warn">بدون سابقه‌ی معامله</span>`);
+  else c.push(`<span class="chip">${r.total} قرارداد · ${r.settled} تسویه‌شده</span>`);
+  if(r.open>=5) c.push(`<span class="chip warn">${r.open} قرارداد باز</span>`); else if(r.open>0) c.push(`<span class="chip">${r.open} باز</span>`);
+  if(r.overdue_open>0) c.push(`<span class="chip bad">${r.overdue_open} قرارداد باز با مهلت گذشته</span>`);
+  if(r.avg_settle_hours!==null) c.push(`<span class="chip">میانگین تسویه ${r.avg_settle_hours>=48?Math.round(r.avg_settle_hours/24)+" روز":r.avg_settle_hours+" ساعت"}</span>`);
+  if(r.open>0) c.push(`<span class="chip">قدیمی‌ترین باز: ${r.oldest_open_days} روز</span>`);
+  return `<div class="chips">${c.join("")}</div>`;
+}
+async function loadRep(addr){
+  try{
+    const [rep, acc] = await Promise.all([
+      api("/api/reputation/"+encodeURIComponent(addr)),
+      api("/api/account/"+encodeURIComponent(addr)),
+    ]);
+    S.reps[addr] = {...rep, balance: acc.balance};
+  }catch(_){}
+}
+
+/* ============================ طرف مقابل: کارت اعتماد ============================ */
+// Reads reputation and live balance of the counterparty from the chain.
+async function fetchCounterparty(cp){
+  const rep = await api("/api/reputation/"+encodeURIComponent(cp));
+  if(!rep.valid) return {valid:false, address:cp};
+  const acc = await api("/api/account/"+encodeURIComponent(cp));
+  return {...rep, balance: acc.balance};
+}
+
+// Form-level check of the counterparty address (debounced while typing).
+let cpTimer=null;
+function checkCp(){
+  clearTimeout(cpTimer);
+  cpTimer=setTimeout(async()=>{
+    const cp=S.form.cp;
+    if(!cp){ S.cpInfo=null; S.cpState="idle"; renderCpInfo(); updateCreateState(); return; }
+    if(cp.length!==58){ S.cpInfo=null; S.cpState="idle"; renderCpInfo(); updateCreateState(); return; }
+    S.cpState="loading"; renderCpInfo();
+    try{
+      const info = await fetchCounterparty(cp);
+      if(S.form.cp!==cp) return;          // the address changed while we were waiting
+      S.cpInfo = info; S.cpState="ready";
+    }catch(e){
+      if(S.form.cp!==cp) return;
+      S.cpInfo=null; S.cpState="error";
+    }
+    renderCpInfo(); updateCreateState();
+  },250);
+}
+
+// Renders the trust card under the address field. Re-run whenever the collateral or
+// deadline changes, so the comparison and timer preview stay current.
+function renderCpInfo(){
+  const box=$("cpInfo"); if(!box) return;
+  const cp=S.form.cp;
+  if(!cp){ box.innerHTML=""; return; }
+  if(cp.length!==58){ box.innerHTML=`<div class="sub">آدرس باید ۵۸ نویسه باشد (الان ${cp.length}).</div>`; return; }
+  if(S.cpState==="loading"){ box.innerHTML=`<div class="sub">در حال خواندن اطلاعات طرف مقابل از زنجیره…</div>`; return; }
+  if(S.cpState==="error"||!S.cpInfo){ box.innerHTML=`<div class="banner err">اطلاعات طرف مقابل از زنجیره خوانده نشد. اتصال گره را بررسی کنید.</div>`; return; }
+  const r=S.cpInfo;
+  if(!r.valid){ box.innerHTML=`<div class="banner err">آدرس نامعتبر است.</div>`; return; }
+
+  const colMicro = algoToMicro(S.form.col);
+  const days = Number(S.form.days);
+  const bal = r.balance;
+
+  // 1) Balance vs collateral
+  let balHtml;
+  if(colMicro===null || colMicro<=0){
+    balHtml = `<div class="sub">مبلغ وثیقه را وارد کنید تا موجودی طرف مقابل با آن سنجیده شود.</div>`;
+  } else if(bal < colMicro){
+    balHtml = `<div class="banner err">⛔ موجودی فعلی طرف مقابل (${fmtAlgo(bal)} ${CONFIG.unit}) کمتر از وثیقه‌ی ${fmtAlgo(colMicro)} ${CONFIG.unit} است. قرارداد ساخته نمی‌شود.</div>`;
+  } else {
+    balHtml = `<div class="banner ok">موجودی فعلی طرف مقابل ${fmtAlgo(bal)} ${CONFIG.unit} است و برای وثیقه‌ی ${fmtAlgo(colMicro)} ${CONFIG.unit} کافی است. این فقط وضعیت همین لحظه است؛ طرف مقابل می‌تواند پیش از واریز پولش را برداشت کند.</div>`;
+  }
+
+  // 2) Deadline / timer preview for the contract that would be created
+  const startTs = chainNow();
+  const dueTs = startTs + days*86400;
+  const timerChips = [
+    `<span class="chip">شروع: ${fmtTs(startTs)}</span>`,
+    `<span class="chip">مهلت اعلام‌شده: ${days} روز (تا ${fmtTs(dueTs)})</span>`,
+  ];
+  if(days >= CONFIG.longDealDays) timerChips.push(`<span class="chip warn">مهلت بلند (${days} روز) برای فروشنده نشانه‌ی منفی است</span>`);
+  const timerHtmlPreview = `<div class="timer" style="margin-top:10px"><b class="sub">زمان‌سنج قرارداد جدید:</b>${timerChips.join("")}</div>`;
+
+  // 3) Identity / history
+  const ageTxt = r.wallet_age_days===null ? "دیده‌نشده در زنجیره" : `${r.wallet_age_days} روز`;
+  const histTxt = r.total===0 ? "بدون سابقه" : `${r.total} قرارداد · ${r.settled} تسویه‌شده`;
+  const avgTxt = r.avg_settle_hours===null ? "—" : (r.avg_settle_hours>=48 ? Math.round(r.avg_settle_hours/24)+" روز" : r.avg_settle_hours+" ساعت");
+
+  box.innerHTML = `
+    <div class="sub" style="margin-top:6px">آدرس کامل را با آدرسی که از طرف مقابل گرفته‌اید نویسه به نویسه مقایسه کنید:</div>
+    ${addrBlock(r.address)}
+    <div class="trust">
+      <h3>اعتبار و موجودی طرف مقابل</h3>
+      <div class="rowline"><span>موجودی فعلی</span><b class="big2" style="font-size:20px">${fmtAlgo(bal)}<span>${CONFIG.unit}</span></b></div>
+      ${balHtml}
+      <div class="rowline"><span>سن کیف پول</span><b>${esc(ageTxt)}</b></div>
+      <div class="rowline"><span>سابقه‌ی معاملات</span><b>${esc(histTxt)}</b></div>
+      <div class="rowline"><span>قرارداد باز / با مهلت گذشته</span><b>${r.open} / ${r.overdue_open}</b></div>
+      <div class="rowline"><span>میانگین زمان تسویه</span><b>${esc(avgTxt)}</b></div>
+      ${r.open>0 ? `<div class="rowline"><span>قدیمی‌ترین قرارداد باز</span><b>${r.oldest_open_days} روز</b></div>` : ""}
+      ${repChips(r)}
+      ${timerHtmlPreview}
+    </div>`;
+}
+
+// Re-fetches the counterparty right before a contract is created (balance may have changed).
+async function validateCounterparty(cp, colMicro){
+  let info;
+  try{ info = await fetchCounterparty(cp); }
+  catch(e){ return {ok:false, msg:"اطلاعات طرف مقابل از زنجیره خوانده نشد: "+e.message}; }
+  S.cpInfo = info; S.cpState="ready"; renderCpInfo(); updateCreateState();
+  if(!info.valid) return {ok:false, msg:"آدرس طرف مقابل نامعتبر است."};
+  if(S.wallet && info.address===S.wallet.address) return {ok:false, msg:"طرف مقابل نمی‌تواند خود شما باشد."};
+  if(colMicro===null || info.balance < colMicro){
+    return {ok:false, msg:`طرف مقابل موجودی کافی برای وثیقه‌ی ${fmtAlgo(colMicro||0)} ${CONFIG.unit} ندارد (موجودی فعلی: ${fmtAlgo(info.balance)} ${CONFIG.unit}). ساخت قرارداد متوقف شد.`};
+  }
+  return {ok:true};
+}
+
+/* ============================ پنجره‌ها ============================ */
+function modal(html){
+  const root = $("modalRoot"); const el = document.createElement("div"); el.className="modal"; el.innerHTML=`<div class="sheet" role="dialog" aria-modal="true">${html}</div>`;
+  root.appendChild(el); return el;
+}
+
+const RISK_STEPS = [
+  {title:"قفل شدن و نبودِ داور", items:[
+    "اگر یک طرف کد تأیید را ثبت نکند، وثیقه‌ی هر دو طرف همین‌طور قفل می‌ماند. داور، مهلت خودکار یا راه خروجی وجود ندارد.",
+    "وثیقه «تضمین» نیست. اگر وثیقه از ارزش معامله کمتر باشد، تقلب برای طرف مقابل می‌تواند همچنان سودآور باشد.",
+    "مهلتِ قرارداد فقط یک نشانه‌ی اعتبار است؛ هرگز پولی را آزاد نمی‌کند."]},
+  {title:"کلید، کد و پرداخت بیرونی", items:[
+    "اگر کلید خصوصی کیف پول را گم کنید، وثیقه‌ی شما و وثیقه‌ی طرف مقابل برای همیشه قفل می‌ماند.",
+    "کد تأیید را فقط پس از دریافت واقعیِ پول یا کالا بدهید؛ حتی اگر طرف مقابل اصرار کند، زودتر ندهید.",
+    "پرداخت بیرون از بلاکچین (کارت‌به‌کارت، حواله، چک) ممکن است برگردد. کدی که داده‌اید پس گرفته نمی‌شود."]},
+  {title:"اطلاعات شخصی و مسئولیت", items:[
+    "برای اثبات پرداخت یا ارسال، بیش از حد لازم اطلاعات شخصی یا بانکی ندهید.",
+    "قرارداد خنثی است و نه طرف معامله و نه کالا را بررسی می‌کند؛ مسئولیت قانونی معامله با خود شماست.",
+    "سابقه‌ی طرف مقابل را ببینید: کیف پول تازه، قراردادهای باز و عقب‌افتاده‌ی زیاد، نشانه‌ی ریسک‌اند."]},
+];
+function riskWizard(title){
+  return new Promise(resolve=>{
+    let i=0; let el;
+    const draw=()=>{
+      const s=RISK_STEPS[i];
+      el.firstElementChild.innerHTML = `
+        <div class="sub" style="margin:0">${esc(title)}</div>
+        <div class="steps">${RISK_STEPS.map((_,k)=>`<i class="${k<=i?"on":""}"></i>`).join("")}</div>
+        <h2 style="font-size:17px">⚠️ ${esc(s.title)} <span class="sub" style="font-weight:400">(تأیید ${i+1} از ${RISK_STEPS.length})</span></h2>
+        <ul>${s.items.map(x=>`<li>${esc(x)}</li>`).join("")}</ul>
+        <label class="check"><input type="checkbox" id="rwChk"><span>موارد بالا را خواندم و می‌فهمم.</span></label>
+        <div class="row" style="justify-content:space-between">
+          <button class="ghost" id="rwNo">انصراف</button>
+          <button id="rwYes" disabled>تأیید ${i+1} از ${RISK_STEPS.length}</button>
+        </div>`;
+      $("rwChk").onchange = e => $("rwYes").disabled = !e.target.checked;
+      $("rwNo").onclick = ()=>{ el.remove(); resolve(false); };
+      $("rwYes").onclick = ()=>{ if(++i>=RISK_STEPS.length){ el.remove(); resolve(true); } else draw(); };
+    };
+    el = modal(""); draw();
+  });
+}
+async function ensureRisksAck(key, title){
+  if(S.acked[key]) return true;
+  const ok = await riskWizard(title);
+  if(ok){ S.acked[key]=true; addLocal("info","سه تأیید هشدار ریسک انجام شد."); } else addLocal("warn","کاربر هشدارهای ریسک را تأیید نکرد؛ عملیات لغو شد.");
+  return ok;
+}
+
+const KIND_FA = {create:"ساخت قرارداد", init:"فعال‌سازی قرارداد", deposit:"واریز وثیقه", withdraw:"برداشت", mark_paid:"ثبت پرداخت", mark_shipped:"ثبت ارسال کالا", enter_code:"ثبت کد تأیید طرف مقابل", delete:"حذف قرارداد و بازپس‌گیری ذخیره"};
+function approveTx(intent, pv){
+  return new Promise(resolve=>{
+    const s=pv.summary;
+    const rows=[["عملیات", KIND_FA[s.kind]||s.kind],["قرارداد", s.app_id? s.app_id : "ساخت جدید"],["کیف پول", S.wallet.name]];
+    if(s.pay_out) rows.push(["خارج می‌شود از کیف شما", fmtAlgo(s.pay_out)+" "+CONFIG.unit]);
+    if(intent.kind==="withdraw") rows.push(["به کیف شما برمی‌گردد", fmtAlgo(intent.amount)+" "+CONFIG.unit]);
+    if(intent.kind==="enter_code") rows.push(["در صورت کامل شدن تسویه","وثیقه‌ی هر دو طرف به صاحبانشان برمی‌گردد"]);
+    if(intent.kind==="create"){ rows.push(["وثیقه‌ی توافقی هر طرف", fmtAlgo(intent.agreed)+" "+CONFIG.unit]); rows.push(["ذخیره‌ی حداقل موجودی حساب شما", "≈ "+fmtAlgo(S.params.app_min_balance)+" "+CONFIG.unit]); }
+    if(intent.kind==="init") rows.push(["پس از تسویه با «حذف قرارداد» برمی‌گردد","✓"]);
+    rows.push(["کارمزد شبکه", fmtAlgo(s.fee)+" "+CONFIG.unit],["موجودی فعلی شما", fmtAlgo(pv.balance)+" "+CONFIG.unit]);
+    const el = modal(`<div class="sub" style="margin:0">کیف پول شبیه‌سازی‌شده (Pera/Defly)</div><h2 style="font-size:17px;margin:6px 0">تأیید تراکنش</h2>
+      <table class="tbl">${rows.map(r=>`<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td></tr>`).join("")}</table>
+      <div class="row" style="justify-content:space-between"><button class="ghost" id="txNo">رد</button><button id="txYes">امضا و ارسال</button></div>`);
+    $("txNo").onclick=()=>{ el.remove(); resolve(false); };
+    $("txYes").onclick=()=>{ el.remove(); resolve(true); };
+  });
+}
+function approveMessage(text){
+  return new Promise(resolve=>{
+    const el = modal(`<div class="sub" style="margin:0">کیف پول شبیه‌سازی‌شده</div><h2 style="font-size:17px;margin:6px 0">امضای پیام (بدون جابه‌جایی پول)</h2>
+      <div class="sub">فقط همین جمله امضا می‌شود. هیچ مبلغی منتقل نمی‌شود. این امضا همان «کد تأیید» شماست؛ فقط پس از دریافت واقعی پول یا کالا آن را به طرف مقابل بدهید.</div>
+      <div class="mono" style="padding:10px;background:rgba(0,0,0,.35);border-radius:12px;margin:10px 0">${esc(text)}</div>
+      <div class="row" style="justify-content:space-between"><button class="ghost" id="mNo">رد</button><button id="mYes">امضا</button></div>`);
+    $("mNo").onclick=()=>{ el.remove(); resolve(false); };
+    $("mYes").onclick=()=>{ el.remove(); resolve(true); };
+  });
+}
+
+/* ============================ اجرای تراکنش ============================ */
+async function waitTx(gid){
+  const end = Date.now()+CONFIG.txTimeoutMs; let last="pending";
+  while(Date.now()<end){
+    try{
+      const st = await api("/api/tx/"+gid);
+      last = st.status;
+      if(st.status!=="pending") return st;
+      S.busyMsg = "در انتظار تأیید در بلوک بعدی…"; renderBusy();
+    }catch(e){ S.busyMsg = "ارتباط با گره قطع است؛ دوباره تلاش می‌کنم…"; renderBusy(); }
+    await new Promise(r=>setTimeout(r,700));
+  }
+  return {status:"timeout", error:"تأیید تراکنش بیش از حد طول کشید. وضعیت واقعی را از زنجیره بخوانید؛ پیش از ارسال دوباره صبر کنید."};
+}
+async function runIntent(intent){
+  if(S.inflight||!S.wallet) return null;
+  S.inflight = intent.kind; S.busyMsg="آماده‌سازی تراکنش…"; render();
+  try{
+    const pv = await api("/api/wallet/preview",{address:S.wallet.address,intent});
+    if(!(await approveTx(intent,pv))){ addLocal("warn","تراکنش را در کیف پول رد کردید."); return null; }
+    const sg = await api("/api/wallet/sign",{address:S.wallet.address,intent});
+    S.busyMsg="ارسال به شبکه…"; renderBusy();
+    const sub = await api("/api/submit",{signed:sg.signed});
+    addLocal("info",`${KIND_FA[intent.kind]}: تراکنش ارسال شد و منتظر بلوک است.`,sub.gid);
+    const st = await waitTx(sub.gid);
+    if(st.status==="confirmed"){ addLocal("ok",`${KIND_FA[intent.kind]} در بلوک ${st.round} تأیید شد.`,sub.gid); toast(KIND_FA[intent.kind]+" انجام شد","ok"); }
+    else { addLocal("err",`${KIND_FA[intent.kind]} انجام نشد: ${st.error||st.status}`,sub.gid); toast(st.error||"تراکنش انجام نشد","err"); }
+    await refreshAll(true);
+    return {...st, gid:sub.gid};
+  }catch(e){
+    addLocal("err",`${KIND_FA[intent.kind]||intent.kind}: ${e.message}`); toast(e.message,"err"); return null;
+  }finally{ S.inflight=null; S.busyMsg=""; render(); }
+}
+
+/* ============================ بارگذاری وضعیت از زنجیره ============================ */
+async function refreshParams(){ S.params = await api("/api/params"); }
+async function refreshWallet(){
+  if(!S.wallet) return;
+  const a = await api("/api/account/"+S.wallet.address); S.balance=a.balance;
+  S.mine = await api("/api/apps/"+S.wallet.address);
+}
+async function refreshApp(){
+  if(!S.appId) return;
+  const [app, ev] = await Promise.all([api("/api/app/"+S.appId), api("/api/app/"+S.appId+"/events")]);
+  S.app = app; S.events = ev;
+  if(app.exists){
+    for(const a of [app.state.buyer, app.state.seller]) if(!S.reps[a] || Math.random()<0.15) loadRep(a);
+  }
+}
+let refreshing=false;
+async function refreshAll(force){
+  if(refreshing && !force) return; refreshing=true;
+  try{ await refreshParams(); await Promise.all([refreshWallet(), refreshApp()]); }
+  catch(e){ /* آفلاین یا خطای گذرا؛ banner نشان می‌دهد */ }
+  finally{ refreshing=false; render(); }
+}
+async function openApp(id){
+  S.appId = Number(id); S.app=null; S.events=[]; S.codes={};
+  addLocal("info",`قرارداد ${id} باز شد.`);
+  await refreshAll(true);
+  if(S.app && !S.app.exists) toast(S.app.deleted?"این قرارداد حذف شده است":"قراردادی با این شناسه وجود ندارد","err");
+}
+
+/* ============================ رندر ============================ */
+function myRole(){
+  const s=S.app?.state; if(!s||!S.wallet) return null;
+  return S.wallet.address===s.buyer?"buyer":S.wallet.address===s.seller?"seller":null;
+}
+function canAct(){
+  return !S.offline && !S.inflight && !!S.wallet && (Date.now()-S.lastOk)<CONFIG.staleMs;
+}
+function render(){
+  renderNet(); renderBanners(); renderBusy(); renderWallet(); renderStart(); renderContract(); renderLog(); renderDev();
+}
+function renderNet(){
+  const dot=$("netDot");
+  if(S.offline){ dot.className="dot off"; $("netText").textContent="قطع · آخرین همگام‌سازی "+(S.lastOk?Math.round((Date.now()-S.lastOk)/1000)+" ثانیه پیش":"—"); }
+  else { dot.className="dot on"; $("netText").textContent=`simulator · round ${S.params?S.params.round:"…"}`; }
+}
+function renderBanners(){
+  const b=[];
+  if(S.offline) b.push(`<div class="banner err"><b>ارتباط با شبکه قطع است.</b> همه‌ی اقدام‌ها غیرفعال شده‌اند. آنچه می‌بینید ممکن است قدیمی باشد؛ این صفحه هرگز بدون ارتباط تصمیم مالی نمی‌گیرد.</div>`);
+  else if(S.lastOk && Date.now()-S.lastOk>CONFIG.staleMs) b.push(`<div class="banner warn">داده‌ها چند ثانیه است به‌روز نشده‌اند.</div>`);
+  if(!S.release.ok) b.push(`<div class="banner err"><b>بررسی امضای ناشر قرارداد ناموفق است:</b> ${esc(S.release.reason)}. تا برطرف نشود هیچ قراردادی نمی‌توان ساخت یا به آن اعتماد کرد.</div>`);
+  if(S.app && S.app.exists){
+    const c = checkApp(S.app);
+    if(!c.ok) b.push(`<div class="banner err"><b>⛔ این قرارداد معتبر نیست:</b> ${esc(c.reason)}. برای امنیت شما همه‌ی اقدام‌ها مسدود است. روی این قرارداد پولی نگذارید.</div>`);
+  }
+  $("banners").innerHTML=b.join("");
+}
+function renderBusy(){
+  $("busy").innerHTML = S.inflight ? `<div class="banner info">⏳ ${esc(S.busyMsg||"در حال انجام…")} <span class="sub">(تا پایان این مرحله دکمه‌ها قفل‌اند؛ دوباره نزنید.)</span></div>` : "";
+}
+function renderWallet(){
+  const card=$("walletCard");
+  if(card.dataset.sig === JSON.stringify([S.wallets.map(w=>w.name),S.wallet?.address,S.balance])) return;
+  card.dataset.sig = JSON.stringify([S.wallets.map(w=>w.name),S.wallet?.address,S.balance]);
+  card.innerHTML = `
+    <div class="cardhead"><div><h2>۱ · کیف پول</h2><div class="sub">در نسخه‌ی واقعی اینجا Pera / Defly متصل می‌شود. در شبیه‌ساز می‌توانید بین چند کیف پول جابه‌جا شوید تا نقش خریدار و فروشنده را هر دو امتحان کنید.</div></div></div>
+    <div class="row">
+      <div class="grow"><label>کیف پول</label>
+        <select id="walletSel"><option value="">— انتخاب کنید —</option>${S.wallets.map(w=>`<option value="${esc(w.address)}" ${S.wallet?.address===w.address?"selected":""}>${esc(w.name)} · ${fmtAlgo(w.balance)} ${CONFIG.unit}</option>`).join("")}</select></div>
+    </div>
+    ${S.wallet?`<div style="margin-top:12px"><div class="k sub">آدرس کامل</div>${addrBlock(S.wallet.address)}<div class="chips"><span class="chip ok">موجودی ${fmtAlgo(S.balance)} ${CONFIG.unit}</span></div></div>`:""}`;
+  $("walletSel").onchange = e => selectWallet(e.target.value);
+}
+async function selectWallet(addr){
+  S.wallet = S.wallets.find(w=>w.address===addr)||null; S.balance=null; S.mine=[];
+  try{ localStorage.setItem(CONFIG.walletKey, S.wallet?.name||""); }catch(_){}
+  if(S.wallet){ addLocal("ok",`کیف پول ${S.wallet.name} انتخاب شد.`); loadRep(S.wallet.address); }
+  $("walletCard").dataset.sig=""; await refreshAll(true);
+}
+
+function renderStart(){
+  const card=$("startCard");
+  if(S.appId && S.app && S.app.exists){
+    const sig = "open"+S.appId;
+    if(card.dataset.sig===sig) return; card.dataset.sig=sig;
+    card.innerHTML=`<div class="row" style="justify-content:space-between;align-items:center"><div><h2>۲ · قرارداد ${esc(S.appId)}</h2><div class="sub">برای کار روی قرارداد دیگر، این قرارداد را ببندید (در بلاکچین هیچ تغییری نمی‌کند).</div></div><button class="ghost" id="closeApp">بستن و بازگشت</button></div>`;
+    $("closeApp").onclick=()=>{ S.appId=null; S.app=null; S.events=[]; $("startCard").dataset.sig=""; render(); };
+    return;
+  }
+  const sigObj = JSON.stringify([!!S.wallet, S.pickRole, S.mine.map(m=>[m.app_id,m.active,m.locked,m.settled]), S.params&&S.params.app_min_balance, !!S.inflight, S.release.ok]);
+  if(card.dataset.sig===sigObj) return; card.dataset.sig=sigObj;
+  const p=S.params;
+  card.innerHTML=`
+    <div class="cardhead"><div><h2>۲ · ساخت یا بازکردن قرارداد</h2></div></div>
+    <label>نقش شما در این قرارداد</label>
+    <div class="roles">
+      <button class="role buyer ${S.pickRole==="buyer"?"active":""}" data-role="buyer">خریدار · Bob<small>وجه را می‌پردازد و کالا را دریافت می‌کند</small></button>
+      <button class="role seller ${S.pickRole==="seller"?"active":""}" data-role="seller">فروشنده · Alice<small>کالا را ارسال می‌کند و وجه را دریافت می‌کند</small></button>
+    </div>
+    <div class="grid2">
+      <div style="grid-column:1/-1"><label>آدرس کامل کیف پول طرف مقابل</label><input id="fCp" placeholder="58 نویسه" spellcheck="false" autocomplete="off" value="${esc(S.form.cp)}"><div id="cpInfo"></div></div>
+      <div><label>وثیقه‌ی هر طرف (${CONFIG.unit})</label><input id="fCol" inputmode="decimal" placeholder="مثلاً 10" value="${esc(S.form.col)}"></div>
+      <div><label>ارزش تقریبی معامله (${CONFIG.unit}، اختیاری؛ فقط برای هشدار)</label><input id="fVal" inputmode="decimal" placeholder="مثلاً 10" value="${esc(S.form.value)}"></div>
+      <div><label>مهلتِ اعلام‌شده برای تسویه (فقط نشانه‌ی اعتبار)</label>
+        <select id="fDays">${[1,3,7,14,30,60,90].map(d=>`<option value="${d}" ${String(d)===S.form.days?"selected":""}>${d} روز</option>`).join("")}</select></div>
+      <div><label>یادداشت (اختیاری، فقط روی همین مرورگر)</label><input id="fNote" class="rtl" value="${esc(S.form.note)}"></div>
+    </div>
+    <div id="createWarn" style="margin-top:12px"></div>
+    <div class="sub" style="margin-top:10px;line-height:1.9">هزینه‌ی ساخت: ≈ ${p?fmtAlgo(p.app_min_balance):"…"} ${CONFIG.unit} به‌عنوان حداقل موجودی (قفل در حساب شما) + ${p?fmtAlgo(p.app_fund):"…"} ${CONFIG.unit} موجودی پایه‌ی قرارداد + چند کارمزد. این مبالغ پس از تسویه با «حذف قرارداد» بازگردانده می‌شوند. حداقل وثیقه: ${p?fmtAlgo(p.min_agreed):"…"} ${CONFIG.unit}.</div>
+    <div style="margin-top:12px"><button id="createBtn" class="${S.pickRole}" disabled>ساخت قرارداد روی بلاکچین</button></div>
+    <div class="divider">یا بازکردن قرارداد موجود</div>
+    <div class="row"><div class="grow"><label>شناسه‌ی قرارداد (App ID)</label><input id="fApp" inputmode="numeric" placeholder="مثلاً 1001"></div><button id="loadBtn" class="ghost">باز کردن</button></div>
+    ${S.mine.length?`<div class="sub" style="margin-top:14px">قراردادهای این کیف پول (از زنجیره):</div><div class="mine">${S.mine.map(m=>`<button data-open="${m.app_id}"><span>#${m.app_id} · ${m.role==="buyer"?"خریدار":"فروشنده"} · ${fmtAlgo(m.agreed)} ${CONFIG.unit}</span><span>${m.deleted?"حذف‌شده":m.settled?"تسویه‌شده":!m.active?"فعال‌نشده":m.locked?"قفل‌شده":"در انتظار واریز"}</span></button>`).join("")}</div>`:""}`;
+  card.querySelectorAll(".role").forEach(b=>b.onclick=()=>{ S.pickRole=b.dataset.role; card.dataset.sig=""; renderStart(); });
+  const upd=()=>{
+    S.form.cp=$("fCp").value.trim(); S.form.col=$("fCol").value.trim(); S.form.value=$("fVal").value.trim(); S.form.days=$("fDays").value; S.form.note=$("fNote").value;
+    renderCpInfo(); updateCreateState();
+  };
+  ["fCol","fVal","fDays","fNote"].forEach(id=>$(id).oninput=upd);
+  $("fCp").oninput=()=>{ upd(); checkCp(); };
+  $("fDays").onchange=upd;
+  $("createBtn").onclick=createContract;
+  $("loadBtn").onclick=()=>{ const v=$("fApp").value.trim(); if(!/^\d+$/.test(v)) return toast("شناسه باید عدد باشد","err"); openApp(v); };
+  card.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openApp(b.dataset.open));
+  renderCpInfo(); updateCreateState();
+  if(S.form.cp && S.form.cp.length===58 && !S.cpInfo && S.cpState==="idle") checkCp();
+}
+
+function updateCreateState(){
+  const btn=$("createBtn"); if(!btn) return;
+  const col=algoToMicro(S.form.col), val=algoToMicro(S.form.value), p=S.params;
+  const issues=[]; const warns=[];
+  if(!S.wallet) issues.push("ابتدا کیف پول را انتخاب کنید.");
+  if(!S.release.ok) issues.push("امضای ناشر قرارداد تأیید نشده است.");
+  if(S.cpState==="loading") issues.push("در حال خواندن اطلاعات طرف مقابل…");
+  else if(!S.cpInfo || !S.cpInfo.valid) issues.push("آدرس طرف مقابل کامل و معتبر نیست.");
+  else if(S.wallet && S.cpInfo.address===S.wallet.address) issues.push("طرف مقابل نمی‌تواند خود شما باشد.");
+  if(col===null||col<=0) issues.push("مبلغ وثیقه معتبر نیست (حداکثر ۶ رقم اعشار)."); else if(p && col<p.min_agreed) issues.push(`وثیقه نباید کمتر از ${fmtAlgo(p.min_agreed)} ${CONFIG.unit} باشد.`);
+  if(col && S.cpInfo && S.cpInfo.valid && typeof S.cpInfo.balance==="number" && S.cpInfo.balance < col)
+    issues.push(`طرف مقابل موجودی کافی برای وثیقه‌ی ${fmtAlgo(col)} ${CONFIG.unit} ندارد.`);
+  if(col && val!==null && val>col) warns.push(`وثیقه (${fmtAlgo(col)}) از ارزش معامله (${fmtAlgo(val)}) کمتر است؛ تقلب برای طرف مقابل می‌تواند سودآور باشد. توصیه: وثیقه ≥ ارزش معامله.`);
+  if(col && val===null && S.form.value==="") warns.push("ارزش معامله را وارد نکرده‌اید؛ نمی‌توانم کفایت وثیقه را بسنجم. وثیقه را دست‌کم برابر ارزش معامله بگیرید.");
+  if(S.balance!==null && col && p && S.balance < col + p.app_min_balance + p.app_fund + 10000) warns.push("موجودی شما برای ساخت و واریز وثیقه ممکن است کافی نباشد.");
+  btn.disabled = issues.length>0 || !canAct();
+  $("createWarn").innerHTML = [...issues.map(x=>`<div class="banner err" style="margin-top:8px">${esc(x)}</div>`), ...warns.map(x=>`<div class="banner warn" style="margin-top:8px">${esc(x)}</div>`)].join("");
+}
+
+async function createContract(opts){
+  const evil = opts && opts.evil;
+  const col=algoToMicro(S.form.col), p=S.params;
+  if(!evil && !(S.release.ok)) return;
+  // Re-check the counterparty on the chain right before creating anything.
+  const check = await validateCounterparty(S.form.cp, col);
+  if(!check.ok){ toast(check.msg,"err"); addLocal("err",check.msg); return; }
+  if(!(await ensureRisksAck("create:"+S.wallet.address+":"+Date.now(), "ساخت قرارداد جدید"))) return;
+  const buyer = S.pickRole==="buyer"?S.wallet.address:S.form.cp, seller = S.pickRole==="seller"?S.wallet.address:S.form.cp;
+  const hash = evil ? p.evil_hash : S.release.releases[0].approval_hash;
+  const r = await runIntent({kind:"create", buyer, seller, agreed:col, due_secs:Number(S.form.days)*86400, approval_hash:hash});
+  if(!r || r.status!=="confirmed" || !r.app_id) return;
+  S.appId = r.app_id; $("startCard").dataset.sig="";
+  addLocal("info", `قرارداد ${r.app_id} ساخته شد؛ مرحله‌ی فعال‌سازی…`);
+  await refreshAll(true);
+  if(S.form.note) addLocal("info","یادداشت: "+S.form.note);
+  await runIntent({kind:"init", app_id:r.app_id});
+}
+
+function vaultCard(role, app, who){
+  const s=app.state, dep=s["dep_"+(role==="buyer"?"b":"s")], locked=s.locked?s.agreed:0;
+  const free = dep-locked, settled=!!s.settled_at;
+  const mine = who===role;
+  const ch = settled ? `<span class="lock released">🔓 تسویه شد؛ بازگشت به صاحب</span>` : s.locked ? `<span class="lock">🔒 قفل شده</span>` : dep>0 ? `<span class="lock empty">واریز شده · هنوز قفل نیست</span>` : `<span class="lock empty">واریزی ندارد</span>`;
+  return `<div class="vault"><h3>${mine?"وثیقه‌ی شما":"وثیقه‌ی طرف مقابل"} · ${roleFa(role)}</h3>
+    <div class="big">${fmtAlgo(settled? s.agreed : dep)}<span>${CONFIG.unit}</span></div>
+    <div class="rows"><div><span>مبلغ توافق‌شده</span><b>${fmtAlgo(s.agreed)}</b></div><div><span>واریزی</span><b>${fmtAlgo(dep)}</b></div><div><span>قفل‌شده</span><b>${fmtAlgo(settled?0:locked)}</b></div><div><span>آزاد و قابل برداشت</span><b>${fmtAlgo(settled?0:free)}</b></div></div>${ch}</div>`;
+}
+function timerHtml(app){
+  const s=app.state; if(!s.active) return `<span class="chip warn">قرارداد هنوز فعال نشده است</span>`;
+  const now=chainNow(); const end = s.settled_at||now;
+  const c=[`<span class="chip">ساخته شده: ${fmtTs(s.created_at)}</span>`,`<span class="chip">مدت باز بودن: ${fmtDur(end-s.created_at)}</span>`];
+  if(s.settled_at) c.push(`<span class="chip ok">تسویه در ${fmtDur(s.settled_at-s.created_at)}</span>`);
+  else if(now>s.due_at) c.push(`<span class="chip bad">مهلت ${fmtDur(now-s.due_at)} پیش گذشته</span>`);
+  else c.push(`<span class="chip ok">${fmtDur(s.due_at-now)} تا پایان مهلت</span>`);
+  if(s.active && !s.settled_at && !s.locked){
+    const role = myRole();
+    const otherAddr = role==="buyer" ? s.seller : role==="seller" ? s.buyer : null;
+    const otherRep = otherAddr ? S.reps[otherAddr] : null;
+    const otherDep = s[role==="buyer" ? "dep_s" : "dep_b"];
+    if(otherRep && otherRep.valid && typeof otherRep.balance === "number"){
+      const otherStillNeeds = Math.max(0, s.agreed - otherDep);
+      if(otherRep.balance < otherStillNeeds){
+        c.push(`<span class="chip bad">⚠️ طرف مقابل موجودی کافی برای وثیقه‌ی ${fmtAlgo(otherStillNeeds)} ${CONFIG.unit} ندارد (موجودی فعلی: ${fmtAlgo(otherRep.balance)} ${CONFIG.unit})</span>`);
+      }
+    }
+  }
+  return c.join("");
+}
+
+/* مراحل هر نقش؛ همه چیز از وضعیت زنجیره محاسبه می‌شود (نه از حافظه‌ی مرورگر) */
+function stageList(app, role){
+  const s=app.state, isB=role==="buyer", me=isB?"b":"s", other=isB?"s":"b";
+  const myDep=s["dep_"+me], otherDep=s["dep_"+other];
+  const free=myDep-(s.locked?s.agreed:0), settled=!!s.settled_at;
+  const need = Math.max(0, s.agreed - myDep);
+  const L=[];
+  if(!s.active) L.push({k:"init", title:"فعال‌سازی قرارداد", st: s.creator===S.wallet.address?"ready":"wait", desc:"قرارداد ساخته شده ولی هنوز فعال نیست. سازنده باید موجودی پایه را بپردازد.", act: s.creator===S.wallet.address?`<button data-act="init" class="${role}">فعال‌سازی (${fmtAlgo(S.params.app_fund)} ${CONFIG.unit})</button>`:`<span class="sub">منتظر فعال‌سازی توسط سازنده. تا آن زمان چیزی واریز نکنید.</span>`});
+  L.push({k:"dep", title:"واریز وثیقه", st: s.locked?"done":(s.active?"ready":"wait"),
+    desc: s.locked ? "هر دو وثیقه به مبلغ توافق‌شده قفل شده‌اند." : `تا وقتی واریزی هر دو طرف به ${fmtAlgo(s.agreed)} ${CONFIG.unit} نرسد، هیچ چیز قفل نیست و هر لحظه می‌توانید همه را پس بگیرید. طرف مقابل تاکنون ${fmtAlgo(otherDep)} واریز کرده است.`,
+    act: (!s.locked&&s.active) ? `<div class="row"><div class="grow"><label>مبلغ واریز (${CONFIG.unit})</label><input id="depAmt" inputmode="decimal" value="${need>0?fmtAlgo(need):""}" placeholder="مبلغ"></div><button data-act="deposit" class="${role}">واریز</button></div>` : ""});
+  if(free>0 && !settled && s.active) L.push({k:"wd", title: s.locked?"برداشت مازاد":"برداشت / لغو", st:"ready",
+    desc: s.locked ? "فقط مازادِ بالاتر از وثیقه‌ی قفل‌شده قابل برداشت است." : "پیش از قفل شدن می‌توانید هر مقدار از واریزی خود را بردارید (لغو کامل = برداشت همه).",
+    act:`<div class="row"><div class="grow"><label>مبلغ برداشت (${CONFIG.unit}) · حداکثر ${fmtAlgo(free)}</label><input id="wdAmt" inputmode="decimal" value="${fmtAlgo(free)}"></div><button data-act="withdraw" class="ghost">برداشت</button></div>`});
+  if(isB){
+    L.push({k:"paid", title:"پرداخت وجه (بیرون از بلاکچین) و ثبت", st: s.paid_at?"done":(s.locked&&!settled?"ready":"wait"),
+      desc:"وجه را خارج از بلاکچین به فروشنده بپردازید، سپس اینجا ثبت کنید. ثبت، پرداخت را اثبات نمی‌کند؛ فقط ثبت اعلام شماست.",
+      act: (!s.paid_at&&s.locked&&!settled)?`<button data-act="mark_paid" class="buyer">پرداخت انجام شد</button>`:""});
+    L.push({k:"entPay", title:"ثبت کد «دریافت وجه» فروشنده", st: s.ent_b?"done":(s.paid_at&&!settled?"ready":"wait"),
+      desc:"پس از دریافت وجه، فروشنده این کد را به شما می‌دهد. آن را اینجا بچسبانید.",
+      act: (!s.ent_b&&s.paid_at&&!settled)?`<div class="row"><div class="grow"><label>کد دریافت وجه از فروشنده</label><input id="codeIn" placeholder="کد" spellcheck="false" autocomplete="off"></div><button data-act="enter_code" class="buyer">ثبت کد</button></div>`:""});
+    L.push({k:"myCode", title:"دریافت کالا و ساخت کد برای فروشنده", st: s.ent_s?"done":(s.shipped_at&&!settled?"ready":"wait"),
+      desc: s.shipped_at?"فقط پس از دریافت واقعی و سالم کالا کد را بسازید و به فروشنده بدهید. کد گم‌شده با ساخت دوباره‌ی همان کد بازیابی می‌شود.":"منتظر ثبت ارسال کالا توسط فروشنده.",
+      act: (s.shipped_at&&!s.ent_s&&!settled)?`<button data-act="make_code" class="buyer">کالا را دریافت کردم · ساخت کد</button>`:""});
+  } else {
+    L.push({k:"ship", title:"ارسال کالا (بیرون از بلاکچین) و ثبت", st: s.shipped_at?"done":(s.locked&&!settled?"ready":"wait"),
+      desc:"کالا را ارسال کنید، سپس اینجا ثبت کنید. ثبت، ارسال را اثبات نمی‌کند.",
+      act:(!s.shipped_at&&s.locked&&!settled)?`<button data-act="mark_shipped" class="seller">کالا ارسال شد</button>`:""});
+    L.push({k:"myCode", title:"دریافت وجه و ساخت کد برای خریدار", st: s.ent_b?"done":(s.paid_at&&!settled?"ready":"wait"),
+      desc: s.paid_at?"فقط پس از نشستن واقعی و قطعی وجه در حسابتان کد را بسازید و به خریدار بدهید. پرداخت‌های برگشت‌پذیر را با احتیاط بپذیرید.":"منتظر ثبت پرداخت توسط خریدار.",
+      act:(s.paid_at&&!s.ent_b&&!settled)?`<button data-act="make_code" class="seller">وجه را دریافت کردم · ساخت کد</button>`:""});
+    L.push({k:"entGoods", title:"ثبت کد «دریافت کالا» خریدار", st: s.ent_s?"done":(s.shipped_at&&!settled?"ready":"wait"),
+      desc:"پس از دریافت کالا، خریدار این کد را به شما می‌دهد. آن را اینجا بچسبانید.",
+      act:(!s.ent_s&&s.shipped_at&&!settled)?`<div class="row"><div class="grow"><label>کد دریافت کالا از خریدار</label><input id="codeIn" placeholder="کد" spellcheck="false" autocomplete="off"></div><button data-act="enter_code" class="seller">ثبت کد</button></div>`:""});
+  }
+  L.push({k:"settle", title:"تسویه", st: settled?"done":"wait", desc: settled?"هر دو کد ثبت شد و وثیقه‌ها (با مازاد) به صاحبانشان برگشت.":"با ثبت هر دو کد، وثیقه‌ها خودکار آزاد می‌شوند. پیش از آن هیچ وثیقه‌ای آزاد نمی‌شود.",
+    act: (settled && s.creator===S.wallet.address)?`<button data-act="delete" class="ghost">حذف قرارداد و بازپس‌گیری ذخیره‌ی ساخت</button>`:""});
+  return L;
+}
+
+function renderContract(){
+  const area=$("contractArea");
+  if(!S.appId || !S.app){ area.style.display="none"; area.dataset.sig=""; return; }
+  area.style.display="flex";
+  const app=S.app;
+  if(!app.exists){ area.innerHTML=`<section class="card"><div class="banner err">${app.deleted?"این قرارداد حذف شده است (پس از تسویه توسط سازنده).":"قراردادی با این شناسه روی زنجیره پیدا نشد."}</div></section>`; area.dataset.sig=""; return; }
+  const s=app.state, role=myRole(), chk=checkApp(app);
+  const sig = JSON.stringify([app, S.reps[s.buyer], S.reps[s.seller], S.wallet?.address, !!S.inflight, S.offline, chk.ok, S.lastCode, Math.floor(chainNow()/30)]);
+  if(area.dataset.sig===sig) return; area.dataset.sig=sig;
+  const keepFocus = document.activeElement && ["depAmt","wdAmt","codeIn"].includes(document.activeElement.id) ? {id:document.activeElement.id,v:document.activeElement.value,pos:document.activeElement.selectionStart} : null;
+  const actOK = canAct() && chk.ok && !!role;
+  let html = `<section class="card"><div class="cardhead"><h2>خلاصه‌ی قرارداد</h2><span class="chip ${chk.ok?"ok":"bad"}">${chk.ok?`✓ امضای ناشر تأیید شد · نسخه ${esc(chk.version)}`:"✗ امضا/نسخه نامعتبر"}</span></div>
+    <div class="kvs">
+      <div class="kv"><div class="k">شناسه‌ی قرارداد</div><div class="v">${esc(app.id)}</div></div>
+      <div class="kv"><div class="k">نقش شما</div><div class="v">${role?roleFa(role):"طرف قرارداد نیستید (فقط مشاهده)"}</div></div>
+      <div class="kv"><div class="k">وثیقه‌ی توافق‌شده‌ی هر طرف</div><div class="v">${fmtAlgo(s.agreed)} ${CONFIG.unit}</div></div>
+      <div class="kv"><div class="k">موجودی خود قرارداد</div><div class="v">${fmtAlgo(app.balance)} ${CONFIG.unit}</div></div>
+    </div>
+    <div class="grid2" style="margin-top:14px">
+      <div class="kv"><div class="k">خریدار (Bob) ${role==="buyer"?"· شما":""}</div>${addrBlock(s.buyer)}${repChips(S.reps[s.buyer])}</div>
+      <div class="kv"><div class="k">فروشنده (Alice) ${role==="seller"?"· شما":""}</div>${addrBlock(s.seller)}${repChips(S.reps[s.seller])}</div>
+    </div>
+    <div class="timer" style="margin-top:14px"><b class="sub">زمان‌سنج:</b>${timerHtml(app)}</div>
+    ${(s.active && !s.settled_at && chainNow()>s.due_at)?`<div class="banner warn" style="margin-top:10px">مهلت اعلام‌شده گذشته است. وثیقه‌ها همچنان قفل‌اند؛ مهلت پولی آزاد نمی‌کند و فقط در اعتبار طرف‌ها دیده می‌شود.</div>`:""}
+    <div class="sub" style="margin-top:10px;line-height:1.9">برنامه‌ی قرارداد (هش): <span class="addr">${esc(app.approval_hash)}</span>آدرس حساب قرارداد: ${addrBlock(app.address)}</div></section>`;
+  html += `<section class="vaults">${vaultCard("buyer",app,role)}${vaultCard("seller",app,role)}</section>`;
+  if(role){
+    const L=stageList(app,role);
+    html += `<section class="card"><div class="cardhead"><h2>مراحل معامله · ${roleFa(role)}</h2><span class="sub">${s.settled_at?"تسویه‌شده":s.locked?"وثیقه‌ها قفل‌اند":"در انتظار قفل شدن"}</span></div><div class="stages">`+
+      L.map((x,i)=>`<div class="stage ${x.st} ${role}"><div class="top"><div class="n">${x.st==="done"?"✓":i+1}</div><div><div class="t">${esc(x.title)}</div><div class="d">${esc(x.desc)}</div></div><span class="tag ${x.st==="done"?"ok":x.st==="ready"?"now":"wait"}">${x.st==="done"?"✓ انجام شد":x.st==="ready"?"اکنون":"در انتظار"}</span></div>${x.act?`<div class="body" data-stage="${x.k}">${x.act}</div>`:""}</div>`).join("")+`</div>`;
+    if(S.lastCode && S.lastCode.app===app.id){
+      html += `<div class="codebox"><div>کد تأیید شما (${esc(S.lastCode.kind==="PAYMENT_RECEIVED"?"دریافت وجه":"دریافت کالا")}) · برای طرف مقابل:</div><div class="c" id="codeText">${esc(S.lastCode.code.match(/.{1,8}/g).join("-"))}</div><div class="row"><button class="ghost small" data-act="copy_code">کپی</button><span class="sub">این کد امضای کیف پول شماست؛ فقط به طرف همین معامله بدهید و فقط پس از دریافت واقعی.</span></div></div>`;
+    }
+    html += `</section>`;
+  } else {
+    html += `<section class="card"><div class="banner info">این کیف پول طرف این قرارداد نیست. فقط می‌توانید وضعیت را ببینید. برای عمل کردن، کیف پول خریدار یا فروشنده را انتخاب کنید.</div></section>`;
+  }
+  area.innerHTML = html;
+  area.querySelectorAll("button[data-act]").forEach(b=>{ b.disabled = !actOK && b.dataset.act!=="copy_code"; b.onclick=()=>doAct(b.dataset.act); });
+  if(keepFocus){ const el=$(keepFocus.id); if(el){ el.value=keepFocus.v; el.focus(); try{ el.setSelectionRange(keepFocus.pos,keepFocus.pos);}catch(_){} } }
+}
+
+async function doAct(act){
+  const app=S.app, s=app.state, role=myRole(); if(!role) return;
+  const id=app.id;
+  if(act==="copy_code"){ copyText(S.lastCode.code.match(/.{1,8}/g).join("-")); return; }
+  if(act==="init") return runIntent({kind:"init",app_id:id});
+  if(act==="deposit"){
+    const amt=algoToMicro($("depAmt").value); if(!amt||amt<=0) return toast("مبلغ واریز نامعتبر است","err");
+    if(S.balance!==null && amt+3000>S.balance) return toast("موجودی کافی نیست","err");
+    if(!(await ensureRisksAck("dep:"+S.wallet.address+":"+id, `پذیرش و واریز روی قرارداد ${id}`))) return;
+    return runIntent({kind:"deposit",app_id:id,amount:amt});
+  }
+  if(act==="withdraw"){
+    const amt=algoToMicro($("wdAmt").value); if(!amt||amt<=0) return toast("مبلغ برداشت نامعتبر است","err");
+    return runIntent({kind:"withdraw",app_id:id,amount:amt});
+  }
+  if(act==="mark_paid"||act==="mark_shipped") return runIntent({kind:act,app_id:id});
+  if(act==="delete") return runIntent({kind:"delete",app_id:id});
+  if(act==="make_code"){
+    const kind = role==="seller"?"PAYMENT_RECEIVED":"GOODS_RECEIVED";
+    const msg = `LMARKET|${s.version}|${S.params.genesis}|${id}|${kind}`;
+    if(!(await approveMessage(msg))) return addLocal("warn","امضای پیام رد شد.");
+    try{
+      const r = await api("/api/wallet/code",{address:S.wallet.address,app_id:id});
+      if(r.message!==msg) throw new Error("پیامی که کیف پول امضا کرد با پیام نمایش‌داده‌شده نمی‌خواند؛ کد استفاده نشود");
+      S.lastCode={app:id,kind,code:r.code}; addLocal("ok","کد تأیید ساخته شد (امضای کیف پول).","کد در صفحه نمایش داده شد"); render();
+    }catch(e){ toast(e.message,"err"); addLocal("err",e.message); }
+    return;
+  }
+  if(act==="enter_code"){
+    const code=($("codeIn").value||"").trim(); if(!code) return toast("کد را وارد کنید","err");
+    return runIntent({kind:"enter_code",app_id:id,code});
+  }
+}
+
+/* ============================ لاگ ============================ */
+function evText(e, app){
+  const who = e.who==="b"?"خریدار":e.who==="s"?"فروشنده":"";
+  switch(e.kind){
+    case "created": return `قرارداد ساخته شد · وثیقه‌ی هر طرف ${fmtAlgo(e.agreed)} ${CONFIG.unit} · مهلت ${Math.round(e.due_secs/86400)} روز`;
+    case "activated": return "قرارداد فعال شد";
+    case "deposit": return `${who} ${fmtAlgo(e.amount)} ${CONFIG.unit} واریز کرد (جمع خریدار ${fmtAlgo(e.dep_b)} · فروشنده ${fmtAlgo(e.dep_s)})`;
+    case "locked": return `هر دو وثیقه به مبلغ ${fmtAlgo(e.agreed)} ${CONFIG.unit} قفل شد`;
+    case "withdraw": return `${who} ${fmtAlgo(e.amount)} ${CONFIG.unit} برداشت کرد${e.locked?" (مازاد)":""}`;
+    case "paid": return "خریدار ثبت کرد: پرداخت انجام شد";
+    case "shipped": return "فروشنده ثبت کرد: کالا ارسال شد";
+    case "code_entered": return `${who} کد تأیید طرف مقابل را ثبت کرد`;
+    case "settled": return `تسویه شد · بازگشت خریدار ${fmtAlgo(e.released_b)} · فروشنده ${fmtAlgo(e.released_s)} ${CONFIG.unit} · طول معامله ${fmtDur(e.seconds)}`;
+    case "deleted": return "قرارداد حذف شد و ذخیره‌ی ساخت بازگشت";
+    default: return e.kind;
+  }
+}
+function mergedLog(){
+  const chain = (S.events||[]).map(e=>({ts:e.ts, type:e.kind==="settled"||e.kind==="locked"?"ok":"info", label:"زنجیره", src:"chain", msg:evText(e,S.app), extra:`round ${e.round} · tx ${e.txid.slice(0,12)}…`}));
+  const local = S.localLog.filter(l=>!l.appId || l.appId===S.appId).map(l=>({ts:l.ts, type:l.type, label:l.label, src:"local", msg:l.msg, extra:l.extra}));
+  return [...chain, ...local].sort((a,b)=>b.ts-a.ts);
+}
+function renderLog(){
+  const items=mergedLog(); const box=$("log");
+  if(!items.length){ box.innerHTML='<div class="empty">هنوز عملیاتی ثبت نشده است.</div>'; return; }
+  box.innerHTML = items.slice(0,300).map(l=>`<div class="entry"><span class="ltag t-${esc(l.type)}">${esc(l.label)}</span><span class="src ${l.src}">${l.src==="chain"?"زنجیره ✓":"محلی"}</span><div class="msg">${esc(l.msg)}${l.extra?`<div class="mono">${esc(l.extra)}</div>`:""}</div><span class="time">${esc(fmtTs(l.ts))}</span></div>`).join("");
+}
+$("exportBtn").onclick=()=>{
+  const data={exported_at:new Date().toISOString(), network:S.params?{round:S.params.round,genesis:S.params.genesis}:null,
+    wallet:S.wallet?.address||null, verification:S.app&&S.app.exists?checkApp(S.app):null,
+    contract:S.app||null, chain_events:S.events, local_log:S.localLog.filter(l=>!l.appId||l.appId===S.appId)};
+  const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}));
+  a.download=`lmarket-${S.appId||"log"}-${Date.now()}.json`; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+};
+$("clearBtn").onclick=()=>{
+  if(!confirm("فقط کش محلی (یادداشت‌های این مرورگر) پاک می‌شود. رویدادهای ثبت‌شده در بلاکچین پاک نمی‌شوند. ادامه می‌دهید؟")) return;
+  S.localLog=[]; try{ localStorage.removeItem(CONFIG.logKey);}catch(_){} renderLog();
+};
+
+/* ============================ ابزار آزمایش ============================ */
+function renderDev(){
+  if(!CONFIG.sim){ $("dev").style.display="none"; return; }
+  const f=S.params?.faults||{};
+  const sig=JSON.stringify([f,!!S.wallet,S.pickRole]); const box=$("devFaults"); if(box.dataset.sig===sig) return; box.dataset.sig=sig;
+  $("devTime").innerHTML = [[1,"+۱ روز"],[7,"+۷ روز"],[30,"+۳۰ روز"],[365,"+۱ سال"]].map(([d,l])=>`<button class="ghost small" data-adv="${d}">زمان زنجیره ${l}</button>`).join("");
+  box.innerHTML=`<button class="ghost small" data-f="offline">${f.offline?"وصل کردن شبکه":"قطع شبکه"}</button>
+    <button class="ghost small" data-f="paused">${f.paused?"ادامه‌ی بلوک‌ها":"توقف بلوک‌ها"}</button>
+    <button class="ghost small" data-f="drop">تراکنش بعدی گم شود</button>
+    <button class="ghost small" data-f="lag">${f.latency_ms?"بدون تأخیر":"تأخیر ۱٫۵ ثانیه"}</button>
+    <button class="ghost small" data-f="block">تولید بلوک</button>
+    <button class="ghost small" data-f="evil">ساخت قرارداد مخرب (آزمون امضا)</button>
+    <button class="danger small" data-f="reset">بازنشانی دنیا</button>`;
+  $("devTime").querySelectorAll("[data-adv]").forEach(b=>b.onclick=async()=>{ await api("/api/dev/advance",{seconds:Number(b.dataset.adv)*86400}); addLocal("info",`ساعت زنجیره ${b.dataset.adv} روز جلو رفت.`); refreshAll(true); });
+  box.querySelectorAll("[data-f]").forEach(b=>b.onclick=async()=>{
+    const k=b.dataset.f, p=S.params.faults;
+    try{
+      if(k==="offline") await api("/api/dev/fault",{offline:!p.offline});
+      if(k==="paused") await api("/api/dev/fault",{paused:!p.paused});
+      if(k==="drop") await api("/api/dev/fault",{drop_next:1});
+      if(k==="lag") await api("/api/dev/fault",{latency_ms:p.latency_ms?0:1500});
+      if(k==="block") await api("/api/dev/block",{});
+      if(k==="reset"){ if(!confirm("کل دنیای شبیه‌سازی بازنشانی شود؟")) return; await api("/api/dev/reset",{}); S.appId=null;S.app=null;S.events=[];S.reps={}; await init(true); return; }
+      if(k==="evil"){ if(!S.wallet||!S.cpInfo?.valid||algoToMicro(S.form.col)===null) return toast("برای آزمون، کیف پول، آدرس طرف مقابل و وثیقه را در فرم ساخت پر کنید","err"); await createContract({evil:true}); return; }
+    }catch(e){ if(!e.net) toast(e.message,"err"); }
+    refreshAll(true);
+  });
+}
+
+/* ============================ شروع ============================ */
+async function init(soft){
+  await verifyRelease();
+  try{
+    await refreshParams();
+    S.wallets = await api("/api/wallets");
+    if(!soft){ const want=localStorage.getItem(CONFIG.walletKey); const w=S.wallets.find(x=>x.name===want); if(w) S.wallet=w; }
+    else S.wallet=null;
+    if(S.wallet){ await refreshWallet(); loadRep(S.wallet.address); }
+  }catch(e){ addLocal("err","اتصال اولیه ناموفق: "+e.message); }
+  $("walletCard").dataset.sig=""; $("startCard").dataset.sig=""; render();
+}
+init();
+setInterval(()=>{ refreshAll().then(()=>{ if(S.wallets.length){ api("/api/wallets").then(w=>{ S.wallets=w; renderWallet(); }).catch(()=>{}); } }); }, CONFIG.pollMs);
+setInterval(()=>{ renderNet(); renderBanners(); }, 1000);
+setInterval(()=>{ if(S.form.cp && S.form.cp.length===58 && S.cpState==="ready") renderCpInfo(); }, 1000);
+</script>
+</body>
+</html>
