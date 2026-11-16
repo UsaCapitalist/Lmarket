@@ -61,11 +61,6 @@
   .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
   .chip{font-size:11px;padding:3px 9px;border-radius:999px;background:rgba(255,255,255,.06);color:var(--muted)}
   .chip.ok{background:rgba(52,211,153,.12);color:var(--ok)} .chip.warn{background:rgba(251,191,36,.13);color:var(--warn)} .chip.bad{background:rgba(248,113,113,.14);color:var(--bad)}
-  .trust{margin-top:12px;padding:14px;border-radius:16px;border:1px solid var(--line);background:rgba(0,0,0,.25)}
-  .trust .big2{font-size:20px;font-weight:800;direction:ltr;text-align:right;margin-top:6px}
-  .trust .big2 span{font-size:12px;color:var(--muted);font-weight:400;margin-right:6px}
-  .trust .rowline{display:flex;justify-content:space-between;gap:10px;font-size:13px;margin-top:6px;flex-wrap:wrap}
-  .trust .rowline b{direction:ltr}
   .stages{display:flex;flex-direction:column;gap:10px}
   .stage{padding:14px;border-radius:16px;border:1px solid var(--line);background:rgba(0,0,0,.25)}
   .stage .top{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center}
@@ -163,14 +158,13 @@ const CONFIG = {
   sim: true,                       // false در نسخه‌ی واقعی: ابزار آزمایش و کیف پول دمو حذف می‌شود
   api: "",                         // هم‌مبدأ با سرور شبیه‌ساز
   // کلید عمومی ناشر قرارداد؛ ثابت و داخل خود رابط (نه از سرور). قرارداد غیر از این امضا مجاز نیست.
-  publisher: "6babe7512efc8568b1f0ac783506d2b63e0782328ce315795e4602e8f848d2dc",
+  publisher: "afc158e18c7b5b9894ec55d205b9374dea2ec6495d8e31342bfa0da90390c871",
   pollMs: 1500,
   staleMs: 10000,
   txTimeoutMs: 90000,
   unit: "ALGO",
   logKey: "lmarket_log_v3",
   walletKey: "lmarket_wallet_v3",
-  longDealDays: 30,                // مهلت بلندتر از این مقدار برای فروشنده نشانه‌ی منفی است
 };
 
 /* ============================ STATE ============================ */
@@ -179,10 +173,7 @@ const S = {
   appId: null, app: null, events: [], reps: {}, mine: [],
   release: {ok:false, reason:"هنوز بررسی نشده", releases:[]},
   offline:false, lastOk:0, inflight:null, busyMsg:"",
-  pickRole:"buyer", acked:{}, codes:{}, lastCode:null,
-  form:{cp:"",col:"",value:"",days:"7",note:""},
-  cpInfo:null,      // {valid, address, ..., balance} برای طرف مقابل فرم ساخت
-  cpState:"idle",   // idle | loading | ready | error
+  pickRole:"buyer", acked:{}, codes:{}, lastCode:null, form:{cp:"",col:"",value:"",days:"7",note:""}, cpInfo:null,
   localLog: [],
 };
 try{ S.localLog = JSON.parse(localStorage.getItem(CONFIG.logKey)||"[]"); }catch(_){ S.localLog=[]; }
@@ -197,6 +188,7 @@ function fmtDur(sec){ sec=Math.abs(Math.floor(sec)); const d=Math.floor(sec/8640
 function fmtTs(ts){ return ts ? new Date(ts*1000).toLocaleString("en-GB",{hour12:false}) : "—"; }
 const chainNow = () => S.params ? S.params.now : Math.floor(Date.now()/1000);
 const roleFa = r => r==="buyer" ? "خریدار (Bob)" : "فروشنده (Alice)";
+const opp = r => r==="buyer" ? "seller" : "buyer";
 const hex2u8 = h => Uint8Array.from(h.match(/../g).map(x=>parseInt(x,16)));
 function addrBlock(a){ return a ? `<span class="addr" title="${esc(a)}">${esc(a)}</span>` : "—"; }
 function copyText(t){ try{ navigator.clipboard.writeText(t); toast("کپی شد","ok"); }catch(_){ toast("کپی ممکن نشد؛ متن را دستی انتخاب کنید","err"); } }
@@ -245,6 +237,7 @@ async function verifyRelease(){
       if(await crypto.subtle.verify({name:"Ed25519"}, key, hex2u8(r.sig), msg)) good.push(r);
     }
     if(!good.length) throw new Error("هیچ نسخه‌ای با امضای معتبر ناشر پیدا نشد");
+    good.sort((a,b)=>b.version.localeCompare(a.version,undefined,{numeric:true}));
     S.release = {ok:true, reason:"", releases:good};
   }catch(e){ S.release = {ok:false, reason:e.message, releases:[]}; }
 }
@@ -259,128 +252,21 @@ function checkApp(app){
 
 /* ============================ اعتبار طرف‌ها ============================ */
 function repChips(r){
+  const n = v => Number.isFinite(Number(v)) ? Number(v) : 0;
   if(!r || !r.valid) return `<span class="chip bad">آدرس نامعتبر</span>`;
   const c=[];
   if(r.wallet_age_days===null) c.push(`<span class="chip warn">این آدرس هنوز در زنجیره دیده نشده</span>`);
-  else c.push(`<span class="chip ${r.wallet_age_days<30?"warn":"ok"}">${r.wallet_age_days<30?"کیف پول تازه · ":"سن کیف پول · "}${r.wallet_age_days} روز</span>`);
+  else c.push(`<span class="chip ${r.wallet_age_days<30?"warn":"ok"}">${r.wallet_age_days<30?"کیف پول تازه · ":"سن کیف پول · "}${n(r.wallet_age_days)} روز</span>`);
   if(r.total===0) c.push(`<span class="chip warn">بدون سابقه‌ی معامله</span>`);
-  else c.push(`<span class="chip">${r.total} قرارداد · ${r.settled} تسویه‌شده</span>`);
-  if(r.open>=5) c.push(`<span class="chip warn">${r.open} قرارداد باز</span>`); else if(r.open>0) c.push(`<span class="chip">${r.open} باز</span>`);
-  if(r.overdue_open>0) c.push(`<span class="chip bad">${r.overdue_open} قرارداد باز با مهلت گذشته</span>`);
+  else c.push(`<span class="chip">${n(r.total)} قرارداد · ${n(r.settled)} تسویه‌شده</span>`);
+  if(r.open>=5) c.push(`<span class="chip warn">${n(r.open)} قرارداد باز</span>`); else if(r.open>0) c.push(`<span class="chip">${n(r.open)} باز</span>`);
+  if(r.overdue_open>0) c.push(`<span class="chip bad">${n(r.overdue_open)} قرارداد باز با مهلت گذشته</span>`);
   if(r.avg_settle_hours!==null) c.push(`<span class="chip">میانگین تسویه ${r.avg_settle_hours>=48?Math.round(r.avg_settle_hours/24)+" روز":r.avg_settle_hours+" ساعت"}</span>`);
-  if(r.open>0) c.push(`<span class="chip">قدیمی‌ترین باز: ${r.oldest_open_days} روز</span>`);
+  if(r.open>0) c.push(`<span class="chip">قدیمی‌ترین باز: ${n(r.oldest_open_days)} روز</span>`);
   return `<div class="chips">${c.join("")}</div>`;
 }
 async function loadRep(addr){
-  try{
-    const [rep, acc] = await Promise.all([
-      api("/api/reputation/"+encodeURIComponent(addr)),
-      api("/api/account/"+encodeURIComponent(addr)),
-    ]);
-    S.reps[addr] = {...rep, balance: acc.balance};
-  }catch(_){}
-}
-
-/* ============================ طرف مقابل: کارت اعتماد ============================ */
-// Reads reputation and live balance of the counterparty from the chain.
-async function fetchCounterparty(cp){
-  const rep = await api("/api/reputation/"+encodeURIComponent(cp));
-  if(!rep.valid) return {valid:false, address:cp};
-  const acc = await api("/api/account/"+encodeURIComponent(cp));
-  return {...rep, balance: acc.balance};
-}
-
-// Form-level check of the counterparty address (debounced while typing).
-let cpTimer=null;
-function checkCp(){
-  clearTimeout(cpTimer);
-  cpTimer=setTimeout(async()=>{
-    const cp=S.form.cp;
-    if(!cp){ S.cpInfo=null; S.cpState="idle"; renderCpInfo(); updateCreateState(); return; }
-    if(cp.length!==58){ S.cpInfo=null; S.cpState="idle"; renderCpInfo(); updateCreateState(); return; }
-    S.cpState="loading"; renderCpInfo();
-    try{
-      const info = await fetchCounterparty(cp);
-      if(S.form.cp!==cp) return;          // the address changed while we were waiting
-      S.cpInfo = info; S.cpState="ready";
-    }catch(e){
-      if(S.form.cp!==cp) return;
-      S.cpInfo=null; S.cpState="error";
-    }
-    renderCpInfo(); updateCreateState();
-  },250);
-}
-
-// Renders the trust card under the address field. Re-run whenever the collateral or
-// deadline changes, so the comparison and timer preview stay current.
-function renderCpInfo(){
-  const box=$("cpInfo"); if(!box) return;
-  const cp=S.form.cp;
-  if(!cp){ box.innerHTML=""; return; }
-  if(cp.length!==58){ box.innerHTML=`<div class="sub">آدرس باید ۵۸ نویسه باشد (الان ${cp.length}).</div>`; return; }
-  if(S.cpState==="loading"){ box.innerHTML=`<div class="sub">در حال خواندن اطلاعات طرف مقابل از زنجیره…</div>`; return; }
-  if(S.cpState==="error"||!S.cpInfo){ box.innerHTML=`<div class="banner err">اطلاعات طرف مقابل از زنجیره خوانده نشد. اتصال گره را بررسی کنید.</div>`; return; }
-  const r=S.cpInfo;
-  if(!r.valid){ box.innerHTML=`<div class="banner err">آدرس نامعتبر است.</div>`; return; }
-
-  const colMicro = algoToMicro(S.form.col);
-  const days = Number(S.form.days);
-  const bal = r.balance;
-
-  // 1) Balance vs collateral
-  let balHtml;
-  if(colMicro===null || colMicro<=0){
-    balHtml = `<div class="sub">مبلغ وثیقه را وارد کنید تا موجودی طرف مقابل با آن سنجیده شود.</div>`;
-  } else if(bal < colMicro){
-    balHtml = `<div class="banner err">⛔ موجودی فعلی طرف مقابل (${fmtAlgo(bal)} ${CONFIG.unit}) کمتر از وثیقه‌ی ${fmtAlgo(colMicro)} ${CONFIG.unit} است. قرارداد ساخته نمی‌شود.</div>`;
-  } else {
-    balHtml = `<div class="banner ok">موجودی فعلی طرف مقابل ${fmtAlgo(bal)} ${CONFIG.unit} است و برای وثیقه‌ی ${fmtAlgo(colMicro)} ${CONFIG.unit} کافی است. این فقط وضعیت همین لحظه است؛ طرف مقابل می‌تواند پیش از واریز پولش را برداشت کند.</div>`;
-  }
-
-  // 2) Deadline / timer preview for the contract that would be created
-  const startTs = chainNow();
-  const dueTs = startTs + days*86400;
-  const timerChips = [
-    `<span class="chip">شروع: ${fmtTs(startTs)}</span>`,
-    `<span class="chip">مهلت اعلام‌شده: ${days} روز (تا ${fmtTs(dueTs)})</span>`,
-  ];
-  if(days >= CONFIG.longDealDays) timerChips.push(`<span class="chip warn">مهلت بلند (${days} روز) برای فروشنده نشانه‌ی منفی است</span>`);
-  const timerHtmlPreview = `<div class="timer" style="margin-top:10px"><b class="sub">زمان‌سنج قرارداد جدید:</b>${timerChips.join("")}</div>`;
-
-  // 3) Identity / history
-  const ageTxt = r.wallet_age_days===null ? "دیده‌نشده در زنجیره" : `${r.wallet_age_days} روز`;
-  const histTxt = r.total===0 ? "بدون سابقه" : `${r.total} قرارداد · ${r.settled} تسویه‌شده`;
-  const avgTxt = r.avg_settle_hours===null ? "—" : (r.avg_settle_hours>=48 ? Math.round(r.avg_settle_hours/24)+" روز" : r.avg_settle_hours+" ساعت");
-
-  box.innerHTML = `
-    <div class="sub" style="margin-top:6px">آدرس کامل را با آدرسی که از طرف مقابل گرفته‌اید نویسه به نویسه مقایسه کنید:</div>
-    ${addrBlock(r.address)}
-    <div class="trust">
-      <h3>اعتبار و موجودی طرف مقابل</h3>
-      <div class="rowline"><span>موجودی فعلی</span><b class="big2" style="font-size:20px">${fmtAlgo(bal)}<span>${CONFIG.unit}</span></b></div>
-      ${balHtml}
-      <div class="rowline"><span>سن کیف پول</span><b>${esc(ageTxt)}</b></div>
-      <div class="rowline"><span>سابقه‌ی معاملات</span><b>${esc(histTxt)}</b></div>
-      <div class="rowline"><span>قرارداد باز / با مهلت گذشته</span><b>${r.open} / ${r.overdue_open}</b></div>
-      <div class="rowline"><span>میانگین زمان تسویه</span><b>${esc(avgTxt)}</b></div>
-      ${r.open>0 ? `<div class="rowline"><span>قدیمی‌ترین قرارداد باز</span><b>${r.oldest_open_days} روز</b></div>` : ""}
-      ${repChips(r)}
-      ${timerHtmlPreview}
-    </div>`;
-}
-
-// Re-fetches the counterparty right before a contract is created (balance may have changed).
-async function validateCounterparty(cp, colMicro){
-  let info;
-  try{ info = await fetchCounterparty(cp); }
-  catch(e){ return {ok:false, msg:"اطلاعات طرف مقابل از زنجیره خوانده نشد: "+e.message}; }
-  S.cpInfo = info; S.cpState="ready"; renderCpInfo(); updateCreateState();
-  if(!info.valid) return {ok:false, msg:"آدرس طرف مقابل نامعتبر است."};
-  if(S.wallet && info.address===S.wallet.address) return {ok:false, msg:"طرف مقابل نمی‌تواند خود شما باشد."};
-  if(colMicro===null || info.balance < colMicro){
-    return {ok:false, msg:`طرف مقابل موجودی کافی برای وثیقه‌ی ${fmtAlgo(colMicro||0)} ${CONFIG.unit} ندارد (موجودی فعلی: ${fmtAlgo(info.balance)} ${CONFIG.unit}). ساخت قرارداد متوقف شد.`};
-  }
-  return {ok:true};
+  try{ S.reps[addr] = await api("/api/reputation/"+encodeURIComponent(addr)); }catch(_){}
 }
 
 /* ============================ پنجره‌ها ============================ */
@@ -481,7 +367,7 @@ async function runIntent(intent){
   try{
     const pv = await api("/api/wallet/preview",{address:S.wallet.address,intent});
     if(!(await approveTx(intent,pv))){ addLocal("warn","تراکنش را در کیف پول رد کردید."); return null; }
-    const sg = await api("/api/wallet/sign",{address:S.wallet.address,intent});
+    const sg = await api("/api/wallet/sign",{address:S.wallet.address,token:pv.token});
     S.busyMsg="ارسال به شبکه…"; renderBusy();
     const sub = await api("/api/submit",{signed:sg.signed});
     addLocal("info",`${KIND_FA[intent.kind]}: تراکنش ارسال شد و منتظر بلوک است.`,sub.gid);
@@ -533,7 +419,7 @@ function canAct(){
   return !S.offline && !S.inflight && !!S.wallet && (Date.now()-S.lastOk)<CONFIG.staleMs;
 }
 function render(){
-  renderNet(); renderBanners(); renderBusy(); renderWallet(); renderStart(); renderContract(); renderLog(); renderDev();
+  renderNet(); renderBanners(); renderBusy(); renderWallet(); renderStart(); updateCreateState(); renderContract(); renderLog(); renderDev();
 }
 function renderNet(){
   const dot=$("netDot");
@@ -609,45 +495,49 @@ function renderStart(){
     ${S.mine.length?`<div class="sub" style="margin-top:14px">قراردادهای این کیف پول (از زنجیره):</div><div class="mine">${S.mine.map(m=>`<button data-open="${m.app_id}"><span>#${m.app_id} · ${m.role==="buyer"?"خریدار":"فروشنده"} · ${fmtAlgo(m.agreed)} ${CONFIG.unit}</span><span>${m.deleted?"حذف‌شده":m.settled?"تسویه‌شده":!m.active?"فعال‌نشده":m.locked?"قفل‌شده":"در انتظار واریز"}</span></button>`).join("")}</div>`:""}`;
   card.querySelectorAll(".role").forEach(b=>b.onclick=()=>{ S.pickRole=b.dataset.role; card.dataset.sig=""; renderStart(); });
   const upd=()=>{
-    S.form.cp=$("fCp").value.trim(); S.form.col=$("fCol").value.trim(); S.form.value=$("fVal").value.trim(); S.form.days=$("fDays").value; S.form.note=$("fNote").value;
-    renderCpInfo(); updateCreateState();
+    S.form.cp=$("fCp").value.trim().toUpperCase(); S.form.col=$("fCol").value.trim(); S.form.value=$("fVal").value.trim(); S.form.days=$("fDays").value; S.form.note=$("fNote").value;
+    updateCreateState();
   };
-  ["fCol","fVal","fDays","fNote"].forEach(id=>$(id).oninput=upd);
-  $("fCp").oninput=()=>{ upd(); checkCp(); };
-  $("fDays").onchange=upd;
+  ["fCp","fCol","fVal","fDays","fNote"].forEach(id=>$(id).oninput=upd);
+  $("fCp").oninput=async()=>{ upd(); await checkCp(); };
   $("createBtn").onclick=createContract;
   $("loadBtn").onclick=()=>{ const v=$("fApp").value.trim(); if(!/^\d+$/.test(v)) return toast("شناسه باید عدد باشد","err"); openApp(v); };
   card.querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openApp(b.dataset.open));
-  renderCpInfo(); updateCreateState();
-  if(S.form.cp && S.form.cp.length===58 && !S.cpInfo && S.cpState==="idle") checkCp();
+  if(S.form.cp) checkCp(); updateCreateState();
 }
-
+let cpTimer=null;
+async function checkCp(){
+  clearTimeout(cpTimer);
+  cpTimer=setTimeout(async()=>{
+    const cp=S.form.cp; const box=$("cpInfo"); if(!box) return;
+    if(!cp){ box.innerHTML=""; S.cpInfo=null; updateCreateState(); return; }
+    if(cp.length!==58){ box.innerHTML=`<div class="sub">آدرس باید ۵۸ نویسه باشد (الان ${cp.length}).</div>`; S.cpInfo=null; updateCreateState(); return; }
+    try{
+      const r = await api("/api/reputation/"+encodeURIComponent(cp)); S.cpInfo=r;
+      if($("cpInfo")) $("cpInfo").innerHTML = (r.valid?`<div class="sub" style="margin-top:6px">آدرس کامل را با آدرسی که از طرف مقابل گرفته‌اید نویسه به نویسه مقایسه کنید:</div>${addrBlock(cp)}`:"")+repChips(r);
+    }catch(e){ S.cpInfo=null; }
+    updateCreateState();
+  },250);
+}
 function updateCreateState(){
   const btn=$("createBtn"); if(!btn) return;
   const col=algoToMicro(S.form.col), val=algoToMicro(S.form.value), p=S.params;
   const issues=[]; const warns=[];
   if(!S.wallet) issues.push("ابتدا کیف پول را انتخاب کنید.");
   if(!S.release.ok) issues.push("امضای ناشر قرارداد تأیید نشده است.");
-  if(S.cpState==="loading") issues.push("در حال خواندن اطلاعات طرف مقابل…");
-  else if(!S.cpInfo || !S.cpInfo.valid) issues.push("آدرس طرف مقابل کامل و معتبر نیست.");
+  if(!S.cpInfo || !S.cpInfo.valid) issues.push("آدرس طرف مقابل کامل و معتبر نیست.");
   else if(S.wallet && S.cpInfo.address===S.wallet.address) issues.push("طرف مقابل نمی‌تواند خود شما باشد.");
   if(col===null||col<=0) issues.push("مبلغ وثیقه معتبر نیست (حداکثر ۶ رقم اعشار)."); else if(p && col<p.min_agreed) issues.push(`وثیقه نباید کمتر از ${fmtAlgo(p.min_agreed)} ${CONFIG.unit} باشد.`);
-  if(col && S.cpInfo && S.cpInfo.valid && typeof S.cpInfo.balance==="number" && S.cpInfo.balance < col)
-    issues.push(`طرف مقابل موجودی کافی برای وثیقه‌ی ${fmtAlgo(col)} ${CONFIG.unit} ندارد.`);
   if(col && val!==null && val>col) warns.push(`وثیقه (${fmtAlgo(col)}) از ارزش معامله (${fmtAlgo(val)}) کمتر است؛ تقلب برای طرف مقابل می‌تواند سودآور باشد. توصیه: وثیقه ≥ ارزش معامله.`);
   if(col && val===null && S.form.value==="") warns.push("ارزش معامله را وارد نکرده‌اید؛ نمی‌توانم کفایت وثیقه را بسنجم. وثیقه را دست‌کم برابر ارزش معامله بگیرید.");
   if(S.balance!==null && col && p && S.balance < col + p.app_min_balance + p.app_fund + 10000) warns.push("موجودی شما برای ساخت و واریز وثیقه ممکن است کافی نباشد.");
   btn.disabled = issues.length>0 || !canAct();
   $("createWarn").innerHTML = [...issues.map(x=>`<div class="banner err" style="margin-top:8px">${esc(x)}</div>`), ...warns.map(x=>`<div class="banner warn" style="margin-top:8px">${esc(x)}</div>`)].join("");
 }
-
 async function createContract(opts){
   const evil = opts && opts.evil;
   const col=algoToMicro(S.form.col), p=S.params;
   if(!evil && !(S.release.ok)) return;
-  // Re-check the counterparty on the chain right before creating anything.
-  const check = await validateCounterparty(S.form.cp, col);
-  if(!check.ok){ toast(check.msg,"err"); addLocal("err",check.msg); return; }
   if(!(await ensureRisksAck("create:"+S.wallet.address+":"+Date.now(), "ساخت قرارداد جدید"))) return;
   const buyer = S.pickRole==="buyer"?S.wallet.address:S.form.cp, seller = S.pickRole==="seller"?S.wallet.address:S.form.cp;
   const hash = evil ? p.evil_hash : S.release.releases[0].approval_hash;
@@ -656,7 +546,6 @@ async function createContract(opts){
   S.appId = r.app_id; $("startCard").dataset.sig="";
   addLocal("info", `قرارداد ${r.app_id} ساخته شد؛ مرحله‌ی فعال‌سازی…`);
   await refreshAll(true);
-  if(S.form.note) addLocal("info","یادداشت: "+S.form.note);
   await runIntent({kind:"init", app_id:r.app_id});
 }
 
@@ -676,18 +565,6 @@ function timerHtml(app){
   if(s.settled_at) c.push(`<span class="chip ok">تسویه در ${fmtDur(s.settled_at-s.created_at)}</span>`);
   else if(now>s.due_at) c.push(`<span class="chip bad">مهلت ${fmtDur(now-s.due_at)} پیش گذشته</span>`);
   else c.push(`<span class="chip ok">${fmtDur(s.due_at-now)} تا پایان مهلت</span>`);
-  if(s.active && !s.settled_at && !s.locked){
-    const role = myRole();
-    const otherAddr = role==="buyer" ? s.seller : role==="seller" ? s.buyer : null;
-    const otherRep = otherAddr ? S.reps[otherAddr] : null;
-    const otherDep = s[role==="buyer" ? "dep_s" : "dep_b"];
-    if(otherRep && otherRep.valid && typeof otherRep.balance === "number"){
-      const otherStillNeeds = Math.max(0, s.agreed - otherDep);
-      if(otherRep.balance < otherStillNeeds){
-        c.push(`<span class="chip bad">⚠️ طرف مقابل موجودی کافی برای وثیقه‌ی ${fmtAlgo(otherStillNeeds)} ${CONFIG.unit} ندارد (موجودی فعلی: ${fmtAlgo(otherRep.balance)} ${CONFIG.unit})</span>`);
-      }
-    }
-  }
   return c.join("");
 }
 
@@ -738,6 +615,7 @@ function renderContract(){
   const app=S.app;
   if(!app.exists){ area.innerHTML=`<section class="card"><div class="banner err">${app.deleted?"این قرارداد حذف شده است (پس از تسویه توسط سازنده).":"قراردادی با این شناسه روی زنجیره پیدا نشد."}</div></section>`; area.dataset.sig=""; return; }
   const s=app.state, role=myRole(), chk=checkApp(app);
+  const cpAddr = role==="buyer"?s.seller:role==="seller"?s.buyer:null;
   const sig = JSON.stringify([app, S.reps[s.buyer], S.reps[s.seller], S.wallet?.address, !!S.inflight, S.offline, chk.ok, S.lastCode, Math.floor(chainNow()/30)]);
   if(area.dataset.sig===sig) return; area.dataset.sig=sig;
   const keepFocus = document.activeElement && ["depAmt","wdAmt","codeIn"].includes(document.activeElement.id) ? {id:document.activeElement.id,v:document.activeElement.value,pos:document.activeElement.selectionStart} : null;
@@ -769,6 +647,7 @@ function renderContract(){
     html += `<section class="card"><div class="banner info">این کیف پول طرف این قرارداد نیست. فقط می‌توانید وضعیت را ببینید. برای عمل کردن، کیف پول خریدار یا فروشنده را انتخاب کنید.</div></section>`;
   }
   area.innerHTML = html;
+  // دکمه‌ها
   area.querySelectorAll("button[data-act]").forEach(b=>{ b.disabled = !actOK && b.dataset.act!=="copy_code"; b.onclick=()=>doAct(b.dataset.act); });
   if(keepFocus){ const el=$(keepFocus.id); if(el){ el.value=keepFocus.v; el.focus(); try{ el.setSelectionRange(keepFocus.pos,keepFocus.pos);}catch(_){} } }
 }
@@ -890,7 +769,6 @@ async function init(soft){
 init();
 setInterval(()=>{ refreshAll().then(()=>{ if(S.wallets.length){ api("/api/wallets").then(w=>{ S.wallets=w; renderWallet(); }).catch(()=>{}); } }); }, CONFIG.pollMs);
 setInterval(()=>{ renderNet(); renderBanners(); }, 1000);
-setInterval(()=>{ if(S.form.cp && S.form.cp.length===58 && S.cpState==="ready") renderCpInfo(); }, 1000);
 </script>
 </body>
 </html>

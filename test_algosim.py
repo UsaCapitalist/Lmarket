@@ -82,7 +82,7 @@ def test_full_happy_path_and_conservation(e):
     assert s["settled_at"] and s["dep_b"] == s["dep_s"] == 0
     assert e.chain.balance(app_address(app)) == LmarketV1.APP_FUND
     # فقط کارمزد و ذخیره‌ی ساخت از کیف‌ها کم شده؛ وثیقه‌ها برگشته‌اند
-    assert e.bal(e.B) == b0 - 4000   # deposit: 2 txns; mark_paid: 1; enter_code: 1
+    assert e.bal(e.B) == b0 - 2000 - 1000 - 3000  # deposit(2 tx) + mark_paid + enter_code؛ وثیقه کامل برگشته
     assert e.chain.supply_check() == e.chain.total_supply
 
 
@@ -135,7 +135,7 @@ def test_cancel_before_lock_and_both_withdraw(e):
     e.send(e.A, dict(kind="withdraw", app_id=app, amount=5 * ALGO))
     e.send(e.B, dict(kind="withdraw", app_id=app, amount=2 * ALGO))
     assert e.chain.balance(app_address(app)) == LmarketV1.APP_FUND   # هیچ پولی بلوکه نشده
-    assert e.bal(e.B) == b0 - 4000   # deposit: 2 txns; withdraw: 2000
+    assert e.bal(e.B) == b0 - 2000 - 2000   # فقط کارمزدِ واریز و برداشت
     assert e.st(app)["dep_b"] == e.st(app)["dep_s"] == 0
 
 
@@ -382,7 +382,9 @@ def test_partial_creation_can_resume(e):
     rep = e.chain.reputation(e.A.address)
     e.send(e.A, dict(kind="init", app_id=app))
     assert e.st(app)["active"] == 1
-    assert e.chain.reputation(e.A.address)["total"] == rep["total"] + 1  # فقط قراردادِ فعال حساب می‌شود
+    assert e.chain.reputation(e.A.address)["total"] == rep["total"]   # هنوز واریزی نیست؛ حساب نمی‌شود
+    e.send(e.A, dict(kind="deposit", app_id=app, amount=ALGO))
+    assert e.chain.reputation(e.A.address)["total"] == rep["total"] + 1
 
 
 # ---------------------------------------------------------------- امضای ناشر و نسخه
@@ -420,8 +422,9 @@ def test_reputation_moves_with_real_contracts(e):
     lock_both(e, app)
     before = e.chain.reputation(e.B.address)
     assert before["open"] >= 1
-    e.chain.advance(8 * DAY)
-    assert e.chain.reputation(e.B.address)["overdue_open"] == before["overdue_open"] + 1
+    e.chain.advance(8 * DAY)   # هشت روز: هم قرارداد تازه (۷ روزه) و هم قرارداد باز قدیمیِ بابِ (۵ روز مانده) عقب می‌افتند
+    after = e.chain.reputation(e.B.address)
+    assert after["overdue_open"] == before["open"] == 2
 
 
 def test_events_are_indexed(e):
@@ -488,3 +491,71 @@ def test_random_fuzz_invariants():
             for acct in e.chain.accounts:
                 b = e.chain.balance(acct)
                 assert b == 0 or b >= e.chain.min_balance(acct) or acct == e.chain.dispenser_addr
+
+
+# ---------------------------------------------------------------- بازبینی: رهاشده، تسویه‌ی امن، آدرس، زنجیره
+def test_create_status_reports_app_id(e):
+    st = e.send(e.A, dict(kind="create", buyer=e.B.address, seller=e.A.address, agreed=5 * ALGO, due_secs=7 * DAY))
+    assert st["app_id"] == e.chain.next_app_id - 1
+
+
+def test_abandoned_contract_can_be_cancelled_and_all_returned(e):
+    before = e.bal(e.A)
+    app = e.new_app()
+    e.send(e.A, dict(kind="delete", app_id=app))
+    assert not e.chain.app_info(app)["exists"]
+    # کارمزد: ساخت ۱۰۰۰ + فعال‌سازی (۲ تراکنش) ۲۰۰۰ + حذف ۲۰۰۰؛ ذخیره‌ی حساب قرارداد کامل برگشته
+    assert e.bal(e.A) == before - 5000
+    assert e.chain.supply_check() == e.chain.total_supply
+
+
+def test_abandoned_contract_does_not_count_as_open(e):
+    before = e.chain.reputation(e.A.address)["open"]
+    app = e.new_app()
+    e.send(e.A, dict(kind="delete", app_id=app))
+    assert e.chain.reputation(e.A.address)["open"] == before
+
+
+def test_cannot_cancel_contract_holding_deposits(e):
+    app = e.new_app()
+    e.send(e.A, dict(kind="deposit", app_id=app, amount=ALGO))
+    e.fails(e.A, dict(kind="delete", app_id=app), "تسویه")
+
+
+def test_lowercase_address_rejected(e):
+    e.fails(e.A, dict(kind="create", buyer=e.B.address.lower(), seller=e.A.address,
+                      agreed=5 * ALGO, due_secs=7 * DAY), "نامعتبر")
+
+
+def test_code_from_previous_world_rejected():
+    old = Env()
+    app_old = old.new_app()
+    old_code = old.code(old.A, app_old, LmarketV1.KIND_PAY)
+    new = Env()
+    app = new.new_app()
+    assert app == app_old                        # همان شناسه‌ی قرارداد، دنیای دیگر
+    lock_both(new, app)
+    new.send(new.B, dict(kind="mark_paid", app_id=app))
+    new.send(new.A, dict(kind="mark_shipped", app_id=app))
+    new.fails(new.B, dict(kind="enter_code", app_id=app, code=old_code), "معتبر")
+
+
+def test_evil_contract_settlement_refuses_and_state_stays(e):
+    evil = e.new_app(approval_hash=EVIL_HASH)
+    lock_both(e, evil)
+    e.send(e.A, dict(kind="withdraw", app_id=evil, amount=9 * ALGO))
+    e.send(e.B, dict(kind="mark_paid", app_id=evil))
+    e.send(e.A, dict(kind="mark_shipped", app_id=evil))
+    e.send(e.B, dict(kind="enter_code", app_id=evil, code=e.code(e.A, evil, LmarketV1.KIND_PAY)))
+    e.fails(e.A, dict(kind="enter_code", app_id=evil, code=e.code(e.B, evil, LmarketV1.KIND_GOODS)), "نمی‌خواند")
+    assert not e.st(evil)["settled_at"]
+
+
+def test_third_party_cannot_poison_reputation(e):
+    before = e.chain.reputation(e.B.address)
+    e.send(e.M, dict(kind="create", buyer=e.B.address, seller=e.M.address, agreed=5 * ALGO, due_secs=7 * DAY))
+    app = e.chain.next_app_id - 1
+    e.send(e.M, dict(kind="init", app_id=app))
+    e.send(e.M, dict(kind="deposit", app_id=app, amount=5 * ALGO))
+    after = e.chain.reputation(e.B.address)
+    assert after["open"] == before["open"] and after["total"] == before["total"]

@@ -1,0 +1,10 @@
+{
+  "publisher": "afc158e18c7b5b9894ec55d205b9374dea2ec6495d8e31342bfa0da90390c871",
+  "releases": [
+    {
+      "version": "1.0.0",
+      "approval_hash": "883ef2c000bb04ca3f3f83cec0ef6b3571789ed444972024a823d0ab9a90fda9",
+      "sig": "9c8772060d735d1e52497866bd5926fc0bc19a73294ec1133f5bc60dc83a749e589b911ce6f3d1c639a42b22b658d6d3b330e590c91950b9efa2b6309417a90d"
+    }
+  ]
+}
