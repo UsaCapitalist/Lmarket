@@ -60,7 +60,8 @@ lmarket/
 **گام ۰ · پیش‌نیازها را بررسی کنید**
 
 - Docker Desktop نصب و **در حال اجرا** باشد (localnet به آن نیاز دارد).
-- Python ۳.۱۲ نصب باشد: `python3 --version`
+- Python ۳.۱۲ نصب باشد: `python3 --version` (ویندوز: `py -3.12 --version`). **Python ۳.۱۳ یا ۳.۱۵ را برای این پروژه استفاده نکنید** مگر اینکه PuyaPy آن را رسماً پشتیبانی کند.
+- در ویندوز: `algokit doctor` ممکن است Node.js و Poetry را گزارش کند. برای این پروژه لازم نیستند و می‌توان آن‌ها را نادیده گرفت.
 - Git نصب باشد: `git --version`
 
 **گام ۱ · مخزن را دریافت کنید**
@@ -74,8 +75,12 @@ git checkout decentralized
 **گام ۲ · محیط پایتون مجازی بسازید**
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate            # ویندوز: .venv\Scripts\activate
+# macOS / Linux
+python3.12 -m venv .venv
+source .venv/bin/activate
+# ویندوز (PowerShell): حتماً نسخه‌ی ۳.۱۲ را انتخاب کنید؛ python پیش‌فرض ممکن است ۳.۱۵ باشد
+py -3.12 -m venv .venv
+.venv\Scripts\activate
 python -m pip install --upgrade pip
 ```
 
@@ -296,7 +301,8 @@ lmarket/
 
 **Step 0 · Check prerequisites**
 - Docker Desktop is installed and **running** (localnet requires it).
-- Python 3.12 is installed: `python3 --version`
+- Python 3.12 is installed: `python3 --version` (Windows: `py -3.12 --version`). **Do not use Python 3.13 or 3.15 for this project** unless PuyaPy officially supports it.
+- On Windows, `algokit doctor` may report Node.js and Poetry as missing. This project does not need them and you can ignore those lines.
 - Git is installed: `git --version`
 
 **Step 1 · Get the repository**
@@ -308,8 +314,12 @@ git checkout decentralized
 
 **Step 2 · Create a virtual environment**
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate            # Windows: .venv\Scripts\activate
+# macOS / Linux
+python3.12 -m venv .venv
+source .venv/bin/activate
+# Windows (PowerShell): you must pick 3.12 explicitly; the default python may be 3.15
+py -3.12 -m venv .venv
+.venv\Scripts\activate
 python -m pip install --upgrade pip
 ```
 
