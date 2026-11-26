@@ -39,6 +39,8 @@ class Lmarket(ARC4Contract):
         self.seller_dep = GlobalState(UInt64)
         # ۰ = قفل نشده، ۱ = از هر طرف دقیقاً agreed قفل شده (یک‌طرفه؛ برگشت ندارد)
         self.locked = GlobalState(UInt64)
+        # ۱ = خریدار پرداخت بیرون‌زنجیره را ثبت کرده (فقط اطلاع‌رسانی؛ هیچ وجهی را آزاد نمی‌کند)
+        self.paid = GlobalState(UInt64)
 
     @arc4.abimethod(create="require")
     def create(
@@ -68,6 +70,7 @@ class Lmarket(ARC4Contract):
         self.buyer_dep.value = UInt64(0)
         self.seller_dep.value = UInt64(0)
         self.locked.value = UInt64(0)
+        self.paid.value = UInt64(0)
 
         log("EVENT:created")
 
@@ -153,3 +156,19 @@ class Lmarket(ARC4Contract):
         itxn.Payment(receiver=Txn.sender, amount=amount.native, fee=0).submit()
 
         log("EVENT:withdrawn")
+
+    @arc4.abimethod
+    def mark_paid(self) -> None:
+        """
+        ثبت پرداخت: فقط خریدار، فقط پس از قفل و فقط یک‌بار.
+        این ثبت صرفاً اعلام است؛ هیچ پولی جابه‌جا و هیچ وثیقه‌ای آزاد نمی‌شود.
+        """
+        log("EVENT:mark_paid_attempt")
+
+        assert Txn.sender == self.buyer.value, "only buyer may mark paid"
+        assert self.locked.value == UInt64(1), "mark paid requires lock"
+        assert self.paid.value == UInt64(0), "already marked paid"
+
+        self.paid.value = UInt64(1)
+
+        log("EVENT:paid")

@@ -50,7 +50,8 @@ def test_teal_keeps_assert_messages():
     for msg in ("buyer and seller must differ", "only buyer or seller may create", "agreed below minimum",
                 "already activated", "only creator may activate", "activation payment must equal APP_FUND",
                 "contract not activated", "only buyer or seller may deposit", "deposit must be positive",
-                "withdraw exceeds deposit", "only buyer or seller may withdraw", "withdraw exceeds free balance"):
+                "withdraw exceeds deposit", "only buyer or seller may withdraw", "withdraw exceeds free balance",
+                "only buyer may mark paid", "mark paid requires lock", "already marked paid"):
         assert msg in teal, f"assert message {msg!r} missing from approval TEAL"
 
 

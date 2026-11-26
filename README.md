@@ -67,7 +67,8 @@ lmarket/
 | ۲ | فعال‌سازی با پرداخت موجودی پایه (`APP_FUND`) | انجام و سبز |
 | ۳الف | `deposit` و `withdraw` پیش از قفل، دیدن واریزی طرف مقابل | انجام و سبز |
 | ۳ب | قفل دقیقِ مبلغ توافقی، مازاد آزاد و قابل برداشت | انجام و سبز |
-| ۴ | ثبت پرداخت (`mark_paid`) و ارسال (`mark_shipped`) | |
+| ۴الف | ثبت پرداخت (`mark_paid`) توسط خریدار | در انتظار تأیید تست |
+| ۴ب | ثبت ارسال (`mark_shipped`) توسط فروشنده | |
 | ۵ | کد تأیید با امضای Ed25519 (`ed25519verify_bare`) روی پیام وابسته به شناسه‌ی قرارداد | |
 | ۶ | تسویه و حذف قرارداد | |
 | ۷ | تست‌های خصمانه: کد جعلی، کد قرارداد دیگر، پیش‌پرداخت به آدرس قرارداد، رقابت دو تراکنش در یک بلوک | |
@@ -374,7 +375,8 @@ lmarket/
 | 2 | Activation with the base balance payment (`APP_FUND`) | done, green |
 | 3a | `deposit` and `withdraw` before lock, counterparty deposit visible | done, green |
 | 3b | Exact-amount lock, free and withdrawable surplus | done, green |
-| 4 | `mark_paid` and `mark_shipped` | |
+| 4a | `mark_paid` by the buyer | awaiting test confirmation |
+| 4b | `mark_shipped` by the seller | |
 | 5 | Confirmation code as an Ed25519 signature (`ed25519verify_bare`) over a message bound to the app id | |
 | 6 | Settlement and deletion | |
 | 7 | Adversarial tests: forged code, code from another contract, pre-funding the contract address, two transactions racing in one block | |

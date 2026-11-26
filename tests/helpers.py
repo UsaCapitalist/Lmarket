@@ -201,6 +201,20 @@ def deposit(app_id: int, who: Actor, amount: int, receiver: str | None = None,
     atc.execute(c, 4)
 
 
+def mark_paid(app_id: int, who: Actor) -> None:
+    """مرحله‌ی ۴الف: ثبت پرداخت توسط خریدار (بدون آرگومان)."""
+    c = algod_client()
+    atc = AtomicTransactionComposer()
+    atc.add_method_call(
+        app_id=app_id,
+        method=abi.Method.from_signature("mark_paid()void"),
+        sender=who.address,
+        sp=c.suggested_params(),
+        signer=who.signer,
+    )
+    atc.execute(c, 4)
+
+
 WITHDRAW_FEE = 2_000   # کارمزد تراکنش بیرونی + تراکنش داخلی، که فراخواننده می‌پردازد
 
 
