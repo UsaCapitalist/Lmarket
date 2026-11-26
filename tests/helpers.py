@@ -11,13 +11,13 @@ import pathlib
 import sys
 from dataclasses import dataclass
 
-from algosdk import abi, account, encoding, transaction
+from algosdk import abi, account, encoding, kmd, transaction
 from algosdk.atomic_transaction_composer import (
     AccountTransactionSigner,
     AtomicTransactionComposer,
 )
 from algosdk.error import AlgodHTTPError
-from algosdk.v2client import algod, kmd
+from algosdk.v2client import algod
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))

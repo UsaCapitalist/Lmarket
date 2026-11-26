@@ -18,21 +18,21 @@ import config  # noqa: E402
 def main() -> int:
     exe = shutil.which("puyapy")
     if not exe:
-        print("[build] puyapy پیدا نشد. محیط مجازی فعال است؟ (گام ۲ و ۴ README)")
+        print("[build] puyapy not found. Is the virtual environment active? (prompt must start with (.venv); README steps 2 and 4)")
         return 1
-    cmd = [exe, "--out-dir", config.BUILD_DIR, config.CONTRACT_FILE]
-    print("[build] اجرا:", " ".join(cmd))
+    # مسیر مطلق: puyapy مسیر نسبی را نسبت به پوشه‌ی فایل قرارداد حل می‌کند (contracts/build)
+    cmd = [exe, "--out-dir", str(ROOT / config.BUILD_DIR), config.CONTRACT_FILE]
+    print("[build] running:", " ".join(cmd))
     rc = subprocess.call(cmd, cwd=ROOT)
     if rc != 0:
-        print("[build] کامپایل ناموفق بود. اگر خطا درباره‌ی گزینه‌ی --out-dir است، "
-              "`puyapy --help` را اجرا کنید و خروجی را بفرستید.")
+        print("[build] compile failed. If the error mentions --out-dir, run `puyapy --help` and report the output.")
         return rc
     teal = ROOT / config.BUILD_DIR / f"{config.CONTRACT_NAME}.approval.teal"
     if not teal.exists():
-        print("[build] فایل TEAL پیدا نشد:", teal)
-        print("[build] محتوای پوشه‌ی build:", sorted(p.name for p in (ROOT / config.BUILD_DIR).glob("*")))
+        print("[build] TEAL file not found:", teal)
+        print("[build] build dir contents:", sorted(p.name for p in (ROOT / config.BUILD_DIR).glob("*")))
         return 1
-    print("[build] approval sha256:", hashlib.sha256(teal.read_bytes()).hexdigest())
+    print("[build] approval TEAL sha256:", hashlib.sha256(teal.read_bytes()).hexdigest())
     return 0
 
 

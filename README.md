@@ -80,6 +80,8 @@ python3.12 -m venv .venv
 source .venv/bin/activate
 # ویندوز (PowerShell): حتماً نسخه‌ی ۳.۱۲ را انتخاب کنید؛ python پیش‌فرض ممکن است ۳.۱۵ باشد
 py -3.12 -m venv .venv
+# اگر activate خطای «running scripts is disabled» داد (فقط برای همین پنجره):
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .venv\Scripts\activate
 python -m pip install --upgrade pip
 ```
@@ -125,8 +127,10 @@ python scripts/build.py
 خروجی باید شامل این‌ها باشد:
 
 - `*.approval.teal` و `*.clear.teal`: برنامه‌ی TEAL که روی زنجیره اجرا می‌شود.
-- `*.arc32.json` یا `*.arc56.json`: قرارداد ABI برای فراخوانی از پایتون یا JS.
-- `*.approval.bin` و `*.clear.bin`: بایت‌کد.
+- `*.arc56.json`: توصیف ABI قرارداد.
+- `*.puya.map`: نقشه‌ی منبع (برای دیباگ).
+
+**مهم:** بعد از `activate` باید ابتدای خط فرمان `(.venv)` دیده شود. بدون آن `pytest` و `puyapy` پیدا نمی‌شوند.
 
 **گام ۷ · هش برنامه را ثبت کنید**
 
@@ -320,6 +324,8 @@ python3.12 -m venv .venv
 source .venv/bin/activate
 # Windows (PowerShell): you must pick 3.12 explicitly; the default python may be 3.15
 py -3.12 -m venv .venv
+# if activate says "running scripts is disabled" (this window only):
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .venv\Scripts\activate
 python -m pip install --upgrade pip
 ```
@@ -355,7 +361,9 @@ algokit localnet status
 python scripts/build.py
 # معادل دستی: puyapy --out-dir build contracts/lmarket.py
 ```
-Expected output: `*.approval.teal` and `*.clear.teal` (the TEAL programs), an ARC-32 or ARC-56 ABI file, and `*.approval.bin` / `*.clear.bin`.
+Expected output: `*.approval.teal` and `*.clear.teal` (the TEAL programs), `*.arc56.json` (ABI description) and `*.puya.map` (source maps).
+
+**Important:** after `activate` the prompt must start with `(.venv)`. Without it `pytest` and `puyapy` are not found.
 
 **Step 7 · Record the program hash**
 The hash of the **compiled** program (not the Python source) determines what runs. Save it; the front end will check it against the chain.

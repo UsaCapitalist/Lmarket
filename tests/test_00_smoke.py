@@ -24,7 +24,7 @@ def test_new_actor_is_funded():
 
 
 def test_build_output_exists():
-    assert helpers.build_exists(), "ابتدا `python scripts/build.py` را اجرا کنید (گام ۶ README)"
+    assert helpers.build_exists(), "build output missing: run `python scripts/build.py` first (README step 6)"
 
 
 def test_programs_compile_on_algod():
@@ -37,5 +37,5 @@ def test_constants_match():
     src = (helpers.ROOT / config.CONTRACT_FILE).read_text()
     for name in ("MIN_AGREED", "MIN_DUE_SECS", "MAX_DUE_SECS"):
         m = re.search(rf"^{name}\s*=\s*([\d_]+)", src, re.M)
-        assert m, f"{name} در قرارداد پیدا نشد"
+        assert m, f"{name} not found in contract source"
         assert int(m.group(1).replace("_", "")) == getattr(config, name), name
