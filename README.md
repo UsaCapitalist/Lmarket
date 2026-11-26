@@ -10,7 +10,7 @@
 
 **ال مارکت** یک پروتکل معامله‌ی شخص به شخص روی Algorand است. دو طرفی که به هم اعتماد شخصی ندارند، هر کدام وثیقه‌ای به **مبلغ برابر** قفل می‌کنند. پرداخت و تحویل کالا بیرون از زنجیره انجام می‌شود و وثیقه‌ها فقط پس از ثبت **هر دو کد تأیید** آزاد می‌شوند.
 
-> **وضعیت این شاخه (`decentralized`):** شبیه‌ساز پایتون و کلید امضای ناشر از مخزن حذف شده‌اند. قرارداد هوشمند به‌صورت PuyaPy نوشته و روی Algorand (ابتدا localnet، سپس testnet) مستقر می‌شود. این شاخه هنوز **قرارداد نهایی ندارد**؛ قرارداد مرحله‌به‌مرحله ساخته می‌شود و فقط **مرحله‌ی ۱ (ساخت قرارداد)** انجام شده است. هیچ مبلغی هنوز در قرارداد نگه‌داری نمی‌شود. جزئیات در بخش «وضعیت پروژه» پایین‌تر است.
+> **وضعیت این شاخه (`decentralized`):** شبیه‌ساز پایتون و کلید امضای ناشر از مخزن حذف شده‌اند. قرارداد هوشمند به‌صورت PuyaPy نوشته و روی Algorand (ابتدا localnet، سپس testnet) مستقر می‌شود. این شاخه هنوز **قرارداد نهایی ندارد**؛ قرارداد مرحله‌به‌مرحله ساخته می‌شود و فقط **مرحله‌ی ۱ (ساخت قرارداد)** و **مرحله‌ی ۲ (فعال‌سازی با `APP_FUND`)** انجام شده است. فقط موجودی پایه‌ی حساب قرارداد نگه‌داری می‌شود و وثیقه‌ای هنوز واریز نمی‌شود. جزئیات در بخش «وضعیت پروژه» پایین‌تر است.
 
 ### ایده‌ی اصلی
 
@@ -64,8 +64,8 @@ lmarket/
 |---|---|---|
 | ۰ | سلامت ابزارها (algod، حساب‌ها، کامپایل TEAL) | انجام و سبز |
 | ۱ | `create` و اعتبارسنجی ورودی‌ها، تغییرناپذیری برنامه | انجام و سبز |
-| ۲ | فعال‌سازی با پرداخت موجودی پایه (`APP_FUND`) | بعدی |
-| ۳ | واریز و برداشت پیش از قفل، قفل دقیقِ مبلغ توافقی، مازاد آزاد، دیدن واریزی طرف مقابل | |
+| ۲ | فعال‌سازی با پرداخت موجودی پایه (`APP_FUND`) | انجام و سبز |
+| ۳ | واریز و برداشت پیش از قفل، قفل دقیقِ مبلغ توافقی، مازاد آزاد، دیدن واریزی طرف مقابل | بعدی |
 | ۴ | ثبت پرداخت (`mark_paid`) و ارسال (`mark_shipped`) | |
 | ۵ | کد تأیید با امضای Ed25519 (`ed25519verify_bare`) روی پیام وابسته به شناسه‌ی قرارداد | |
 | ۶ | تسویه و حذف قرارداد | |
@@ -316,7 +316,7 @@ Apache License 2.0. فایل `LICENSE` را ببینید.
 
 **Lmarket** is a peer-to-peer trade protocol on Algorand. Two parties who do not trust each other each lock an **equal** amount of collateral. Payment and delivery happen off-chain, and collateral is released only after **both confirmation codes** are recorded.
 
-> **Status of this branch (`decentralized`):** the Python simulator and the publisher signing key have been removed from the tree. The smart contract is being written in PuyaPy and deployed to Algorand (localnet first, then testnet). **This branch does not yet contain the final contract**; it is built stage by stage and only **stage 1 (contract creation)** is done. The contract holds no funds yet. See "Project status" below.
+> **Status of this branch (`decentralized`):** the Python simulator and the publisher signing key have been removed from the tree. The smart contract is being written in PuyaPy and deployed to Algorand (localnet first, then testnet). **This branch does not yet contain the final contract**; it is built stage by stage and only **stage 1 (contract creation)** and **stage 2 (activation with `APP_FUND`)** are done. The contract holds only its base balance; no collateral can be deposited yet. See "Project status" below.
 
 ### Core ideas
 
@@ -370,8 +370,8 @@ lmarket/
 |---|---|---|
 | 0 | Tooling health (algod, accounts, TEAL compile) | done, green |
 | 1 | `create` and input validation, immutable program | done, green |
-| 2 | Activation with the base balance payment (`APP_FUND`) | next |
-| 3 | Deposit and withdraw before lock, exact-amount lock, free surplus, counterparty deposit visible | |
+| 2 | Activation with the base balance payment (`APP_FUND`) | done, green |
+| 3 | Deposit and withdraw before lock, exact-amount lock, free surplus, counterparty deposit visible | next |
 | 4 | `mark_paid` and `mark_shipped` | |
 | 5 | Confirmation code as an Ed25519 signature (`ed25519verify_bare`) over a message bound to the app id | |
 | 6 | Settlement and deletion | |
