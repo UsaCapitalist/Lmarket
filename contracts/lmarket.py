@@ -41,6 +41,8 @@ class Lmarket(ARC4Contract):
         self.locked = GlobalState(UInt64)
         # ۱ = خریدار پرداخت بیرون‌زنجیره را ثبت کرده (فقط اطلاع‌رسانی؛ هیچ وجهی را آزاد نمی‌کند)
         self.paid = GlobalState(UInt64)
+        # ۱ = فروشنده ارسال را ثبت کرده (فقط اطلاع‌رسانی؛ مستقل از paid و بدون آزادسازی وجه)
+        self.shipped = GlobalState(UInt64)
 
     @arc4.abimethod(create="require")
     def create(
@@ -71,6 +73,7 @@ class Lmarket(ARC4Contract):
         self.seller_dep.value = UInt64(0)
         self.locked.value = UInt64(0)
         self.paid.value = UInt64(0)
+        self.shipped.value = UInt64(0)
 
         log("EVENT:created")
 
@@ -172,3 +175,20 @@ class Lmarket(ARC4Contract):
         self.paid.value = UInt64(1)
 
         log("EVENT:paid")
+
+    @arc4.abimethod
+    def mark_shipped(self) -> None:
+        """
+        ثبت ارسال: فقط فروشنده، فقط پس از قفل و فقط یک‌بار.
+        ترتیب آن نسبت به mark_paid اجباری نیست (بیرون از زنجیره هر ترتیبی ممکن است).
+        صرفاً اعلام است؛ هیچ پولی جابه‌جا و هیچ وثیقه‌ای آزاد نمی‌شود.
+        """
+        log("EVENT:mark_shipped_attempt")
+
+        assert Txn.sender == self.seller.value, "only seller may mark shipped"
+        assert self.locked.value == UInt64(1), "mark shipped requires lock"
+        assert self.shipped.value == UInt64(0), "already marked shipped"
+
+        self.shipped.value = UInt64(1)
+
+        log("EVENT:shipped")

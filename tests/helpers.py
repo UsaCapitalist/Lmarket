@@ -215,6 +215,20 @@ def mark_paid(app_id: int, who: Actor) -> None:
     atc.execute(c, 4)
 
 
+def mark_shipped(app_id: int, who: Actor) -> None:
+    """مرحله‌ی ۴ب: ثبت ارسال توسط فروشنده (بدون آرگومان)."""
+    c = algod_client()
+    atc = AtomicTransactionComposer()
+    atc.add_method_call(
+        app_id=app_id,
+        method=abi.Method.from_signature("mark_shipped()void"),
+        sender=who.address,
+        sp=c.suggested_params(),
+        signer=who.signer,
+    )
+    atc.execute(c, 4)
+
+
 WITHDRAW_FEE = 2_000   # کارمزد تراکنش بیرونی + تراکنش داخلی، که فراخواننده می‌پردازد
 
 
