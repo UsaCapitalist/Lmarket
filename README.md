@@ -100,7 +100,7 @@ algokit doctor
 **گام ۴ · پکیج‌های پروژه را نصب کنید**
 
 ```bash
-pip install puyapy algorand-python algokit-utils pytest
+pip install -r requirements.txt
 puyapy --version
 ```
 
@@ -118,8 +118,8 @@ algokit localnet status
 **گام ۶ · کامپایل قرارداد**
 
 ```bash
-puyapy contracts/lmarket.py -o build
-ls build/
+python scripts/build.py
+# معادل دستی: puyapy --out-dir build contracts/lmarket.py
 ```
 
 خروجی باید شامل این‌ها باشد:
@@ -169,7 +169,8 @@ algokit goal app read --app-id <APP_ID> --global   # وضعیت سراسری (lo
 **گام ۱۲ · تست‌های قرارداد را اجرا کنید**
 
 ```bash
-pytest -q tests/
+pytest -q tests/test_00_smoke.py   # ابتدا سلامت ابزارها
+pytest -q tests/                  # سپس همه‌ی مراحل
 ```
 
 تست‌ها باید این موارد را پوشش دهند: مسیر موفق، برداشت پیش از قفل، برداشت از وثیقه‌ی قفل‌شده، کد جعلی، کد قرارداد دیگر، پیش‌پرداخت بیرونی به آدرس قرارداد، حذف قرارداد، و رقابت دو تراکنش در یک بلوک.
@@ -177,7 +178,7 @@ pytest -q tests/
 **گام ۱۳ · یک تست خاص را اجرا کنید**
 
 ```bash
-pytest -q tests/test_codes.py::test_wrong_signer -s
+pytest -q tests/test_01_create.py -s --log-cli-level=DEBUG
 ```
 
 پرچم `-s` لاگ‌های `print` و `log` را نشان می‌دهد.
@@ -336,7 +337,7 @@ algokit doctor
 
 **Step 4 · Install project packages**
 ```bash
-pip install puyapy algorand-python algokit-utils pytest
+pip install -r requirements.txt
 puyapy --version
 ```
 
@@ -351,8 +352,8 @@ algokit localnet status
 
 **Step 6 · Compile the contract**
 ```bash
-puyapy contracts/lmarket.py -o build
-ls build/
+python scripts/build.py
+# معادل دستی: puyapy --out-dir build contracts/lmarket.py
 ```
 Expected output: `*.approval.teal` and `*.clear.teal` (the TEAL programs), an ARC-32 or ARC-56 ABI file, and `*.approval.bin` / `*.clear.bin`.
 
@@ -388,13 +389,14 @@ Or open the indexer at `http://localhost:8980` and search for the transaction ID
 
 **Step 12 · Run the contract tests**
 ```bash
-pytest -q tests/
+pytest -q tests/test_00_smoke.py   # tool health first
+pytest -q tests/                  # then every stage
 ```
 Tests must cover: the happy path; withdrawing before lock; withdrawing from locked collateral; forged codes; a code from another contract; an off-chain payment sent to the contract address; deleting a contract; and two transactions competing in the same block.
 
 **Step 13 · Run one test with output**
 ```bash
-pytest -q tests/test_codes.py::test_wrong_signer -s
+pytest -q tests/test_01_create.py -s --log-cli-level=DEBUG
 ```
 The `-s` flag shows `print` and `log` output.
 

@@ -1,0 +1,5 @@
+# پس از اولین اجرای موفق، با `pip freeze` نسخه‌ها را قفل کنید.
+puyapy
+algorand-python
+py-algorand-sdk
+pytest
