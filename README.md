@@ -54,7 +54,7 @@ lmarket/
 
 ## وضعیت پروژه (برای ادامه‌ی کار، حتی با مدل یا توسعه‌دهنده‌ی دیگر)
 
-**آخرین وضعیت تأییدشده:** روی ویندوز با localnet الگوکیت، `tests/test_00_smoke.py` (۸ تست) و `tests/test_01_create.py` (۱۶ تست) هر دو کاملاً سبز هستند. هش TEAL تأییدی در آن اجرا: `4bed6c24fb656d9404ca3eaff3794e1178ed5a6d6994c0cc970beca7a2ba9abf`.
+**آخرین وضعیت تأییدشده:** روی ویندوز با localnet الگوکیت، `tests/test_00_smoke.py` (۸ تست)، `tests/test_01_create.py` (۱۶ تست) و `tests/test_02_activate.py` (۸ تست) کاملاً سبز هستند. هش TEAL تأییدی در آن اجرا: `c7afc0eb103708f746881509b11c078b93a5083460e0d80ea63bbfe7f6226594`.
 
 **نسخه‌هایی که با آن‌ها کار کرده است:** AlgoKit 2.10.2، puyapy 5.10.1، algorand-python 4.0.0، py-algorand-sdk 2.12.0، pytest 9.2.0، Python **3.12** داخل venv (پایتون سراسری ۳٫۱۵ است و نباید برای پروژه استفاده شود)، algod 5.1.1 روی localnet.
 
@@ -360,7 +360,7 @@ lmarket/
 
 ## Project status (for continuing with another model or developer)
 
-**Last verified state:** on Windows with AlgoKit localnet, `tests/test_00_smoke.py` (8 tests) and `tests/test_01_create.py` (16 tests) are fully green. Approval TEAL sha256 in that run: `4bed6c24fb656d9404ca3eaff3794e1178ed5a6d6994c0cc970beca7a2ba9abf`.
+**Last verified state:** on Windows with AlgoKit localnet, `tests/test_00_smoke.py` (8 tests), `tests/test_01_create.py` (16 tests) and `tests/test_02_activate.py` (8 tests) are fully green. Approval TEAL sha256 in that run: `c7afc0eb103708f746881509b11c078b93a5083460e0d80ea63bbfe7f6226594`.
 
 **Versions it worked with:** AlgoKit 2.10.2, puyapy 5.10.1, algorand-python 4.0.0, py-algorand-sdk 2.12.0, pytest 9.2.0, Python **3.12** inside the venv (the global Python is 3.15 and must not be used for this project), algod 5.1.1 on localnet.
 
