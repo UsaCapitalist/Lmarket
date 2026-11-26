@@ -10,7 +10,7 @@
 
 **ال مارکت** یک پروتکل معامله‌ی شخص به شخص روی Algorand است. دو طرفی که به هم اعتماد شخصی ندارند، هر کدام وثیقه‌ای به **مبلغ برابر** قفل می‌کنند. پرداخت و تحویل کالا بیرون از زنجیره انجام می‌شود و وثیقه‌ها فقط پس از ثبت **هر دو کد تأیید** آزاد می‌شوند.
 
-> **وضعیت این شاخه (`decentralized`):** شبیه‌ساز پایتون و کلید امضای ناشر از مخزن حذف شده‌اند. قرارداد هوشمند به‌صورت PuyaPy نوشته و روی Algorand (ابتدا localnet، سپس testnet) مستقر می‌شود. این شاخه هنوز **قرارداد نهایی ندارد**؛ فایل `contracts/lmarket.py` در مرحله‌ی بعد نوشته می‌شود.
+> **وضعیت این شاخه (`decentralized`):** شبیه‌ساز پایتون و کلید امضای ناشر از مخزن حذف شده‌اند. قرارداد هوشمند به‌صورت PuyaPy نوشته و روی Algorand (ابتدا localnet، سپس testnet) مستقر می‌شود. این شاخه هنوز **قرارداد نهایی ندارد**؛ قرارداد مرحله‌به‌مرحله ساخته می‌شود و فقط **مرحله‌ی ۱ (ساخت قرارداد)** انجام شده است. هیچ مبلغی هنوز در قرارداد نگه‌داری نمی‌شود. جزئیات در بخش «وضعیت پروژه» پایین‌تر است.
 
 ### ایده‌ی اصلی
 
@@ -42,11 +42,70 @@ lmarket/
 ├── LICENSE                # Apache-2.0
 ├── .gitignore
 ├── index.html             # رابط نمایشی؛ هنوز به زنجیره وصل نیست
-├── contracts/             # قرارداد PuyaPy (در مرحله‌ی بعد)
+├── contracts/lmarket.py   # قرارداد PuyaPy (مرحله‌ی ۱)
+├── config.py              # همه‌ی تنظیمات (بدون متغیر محیطی)
 ├── scripts/               # deploy و ابزارهای کمکی
 ├── tests/                 # تست‌های قرارداد روی localnet
 ├── build/                 # خروجی puyapy؛ در git نیست
 └── legacy/simulator/      # شبیه‌ساز قدیمی پایتون (فقط آرشیو)
+```
+
+---
+
+## وضعیت پروژه (برای ادامه‌ی کار، حتی با مدل یا توسعه‌دهنده‌ی دیگر)
+
+**آخرین وضعیت تأییدشده:** روی ویندوز با localnet الگوکیت، `tests/test_00_smoke.py` (۸ تست) و `tests/test_01_create.py` (۱۶ تست) هر دو کاملاً سبز هستند. هش TEAL تأییدی در آن اجرا: `4bed6c24fb656d9404ca3eaff3794e1178ed5a6d6994c0cc970beca7a2ba9abf`.
+
+**نسخه‌هایی که با آن‌ها کار کرده است:** AlgoKit 2.10.2، puyapy 5.10.1، algorand-python 4.0.0، py-algorand-sdk 2.12.0، pytest 9.2.0، Python **3.12** داخل venv (پایتون سراسری ۳٫۱۵ است و نباید برای پروژه استفاده شود)، algod 5.1.1 روی localnet.
+
+### مرحله‌ها
+
+| مرحله | محتوا | وضعیت |
+|---|---|---|
+| ۰ | سلامت ابزارها (algod، حساب‌ها، کامپایل TEAL) | انجام و سبز |
+| ۱ | `create` و اعتبارسنجی ورودی‌ها، تغییرناپذیری برنامه | انجام و سبز |
+| ۲ | فعال‌سازی با پرداخت موجودی پایه (`APP_FUND`) | بعدی |
+| ۳ | واریز و برداشت پیش از قفل، قفل دقیقِ مبلغ توافقی، مازاد آزاد، دیدن واریزی طرف مقابل | |
+| ۴ | ثبت پرداخت (`mark_paid`) و ارسال (`mark_shipped`) | |
+| ۵ | کد تأیید با امضای Ed25519 (`ed25519verify_bare`) روی پیام وابسته به شناسه‌ی قرارداد | |
+| ۶ | تسویه و حذف قرارداد | |
+| ۷ | تست‌های خصمانه: کد جعلی، کد قرارداد دیگر، پیش‌پرداخت به آدرس قرارداد، رقابت دو تراکنش در یک بلوک | |
+
+هر مرحله فقط چند خط به قرارداد اضافه می‌کند و تست خودش را دارد. مرحله‌ی بعد فقط وقتی شروع می‌شود که تست‌های قبلی سبز باشند.
+
+### قواعد طراحی (از توافق پروژه)
+
+- بدون مدیر، بدون به‌روزرسانی، بدون کلید ناشر. تأیید صحت برنامه با هش TEAL کامپایل‌شده است، نه سورس پایتون.
+- پیش از قفل، هر طرف هر لحظه واریزی خود را برمی‌دارد. با رسیدن واریزی هر دو طرف به مبلغ توافقی، **دقیقاً همان مبلغ** از هر طرف قفل می‌شود؛ مازاد آزاد و قابل برداشت می‌ماند.
+- هیچ وثیقه‌ای پیش از ثبت **هر دو** کد تأیید آزاد نمی‌شود. مهلت (`due_secs`) فقط اطلاع‌رسانی است و هرگز وجهی را آزاد نمی‌کند.
+- کد تأیید باید امضای Ed25519 طرف مقابل باشد، روی پیامی که به شناسه‌ی قرارداد گره خورده است تا در قرارداد دیگر قابل بازاستفاده نباشد.
+- قرارداد بی‌طرف می‌ماند و حق دخالت ندارد. اعتبار (قراردادهای باز، مدت، سن کیف پول) به بازار سپرده می‌شود و رابط فقط هشدار می‌دهد.
+
+### قواعد کار روی کد
+
+- **خروجی ترمینال (print، پیام assert تست‌ها، لاگ) باید انگلیسی باشد.** کامنت‌ها، docstringها و مستندات فارسی می‌مانند.
+- تنظیمات فقط در `config.py` است، نه متغیر محیطی. ثابت‌های بالای `contracts/lmarket.py` باید با `config.py` یکی باشند (تست `test_constants_match` بررسی می‌کند).
+- تماس با py-algorand-sdk فقط در `tests/helpers.py` است تا تغییر نسخه‌ی SDK فقط یک فایل را درگیر کند.
+- هر تست رد‌شدن دو چیز را ثابت می‌کند: رد شد، و به همان پیام assert مورد انتظار رد شد (`helpers.rejected`). هر رد‌شدن یک «شاهد موفق» با ورودی درست هم دارد.
+- پیام‌های assert قرارداد انگلیسی‌اند و باید در TEAL به‌صورت کامنت بمانند (تست `test_teal_keeps_assert_messages`).
+- بعد از هر تغییر قرارداد: `python scripts/build.py` و سپس `pytest`. هش جدید را ثبت کنید.
+
+### مشکلات شناخته‌شده و کارهای باز
+
+- `GLOBAL_UINTS` و `GLOBAL_BYTES` در `config.py` فعلاً بزرگ‌تر از نیاز هستند. در پایان باید با عدد دقیق جایگزین شوند، چون هر اسلات اضافه موجودی حداقلِ سازنده را بالا می‌برد.
+- هنوز **تست پیش‌پرداخت به آدرس قرارداد** (قبل از ساخته شدن) و تست رقابت در یک بلوک وجود ندارد؛ در مرحله‌ی ۷ می‌آیند.
+- `index.html` هنوز به زنجیره وصل نیست و به `release.json` و `algosim` قدیمی وابسته است. باید بازنویسی شود و هش TEAL را از زنجیره بخواند.
+- این مخزن حسابرسی امنیتی نشده است. استفاده روی mainnet بدون حسابرسی مستقل ممنوع است.
+- کلید خصوصی ناشر قدیمی در تاریخچه‌ی git هنوز موجود است؛ آن را افشاشده فرض کنید (بخش «امنیت و تاریخچه‌ی مخزن»).
+- commit `822ed8e` هنوز ایمیل `claude@anthropic.com` دارد (فقط یک نکته‌ی ظاهری در تاریخچه).
+
+### اجرای سریع برای بررسی وضعیت فعلی (ویندوز، با `(.venv)` فعال و localnet روشن)
+
+```powershell
+git pull
+python scripts/build.py
+pytest -q tests/test_00_smoke.py
+pytest -q tests/test_01_create.py
 ```
 
 ---
@@ -257,7 +316,7 @@ Apache License 2.0. فایل `LICENSE` را ببینید.
 
 **Lmarket** is a peer-to-peer trade protocol on Algorand. Two parties who do not trust each other each lock an **equal** amount of collateral. Payment and delivery happen off-chain, and collateral is released only after **both confirmation codes** are recorded.
 
-> **Status of this branch (`decentralized`):** the Python simulator and the publisher signing key have been removed from the tree. The smart contract is being written in PuyaPy and deployed to Algorand (localnet first, then testnet). **This branch does not yet contain the final contract**; `contracts/lmarket.py` is the next step.
+> **Status of this branch (`decentralized`):** the Python simulator and the publisher signing key have been removed from the tree. The smart contract is being written in PuyaPy and deployed to Algorand (localnet first, then testnet). **This branch does not yet contain the final contract**; it is built stage by stage and only **stage 1 (contract creation)** is done. The contract holds no funds yet. See "Project status" below.
 
 ### Core ideas
 
@@ -289,11 +348,70 @@ lmarket/
 ├── LICENSE                # Apache-2.0
 ├── .gitignore
 ├── index.html             # demo UI; not yet connected to the chain
-├── contracts/             # PuyaPy contract (next step)
+├── contracts/lmarket.py   # PuyaPy contract (stage 1)
+├── config.py              # all settings (no environment variables)
 ├── scripts/               # deployment and helpers
 ├── tests/                 # contract tests on localnet
 ├── build/                 # puyapy output; not committed
 └── legacy/simulator/      # archived Python simulator
+```
+
+---
+
+## Project status (for continuing with another model or developer)
+
+**Last verified state:** on Windows with AlgoKit localnet, `tests/test_00_smoke.py` (8 tests) and `tests/test_01_create.py` (16 tests) are fully green. Approval TEAL sha256 in that run: `4bed6c24fb656d9404ca3eaff3794e1178ed5a6d6994c0cc970beca7a2ba9abf`.
+
+**Versions it worked with:** AlgoKit 2.10.2, puyapy 5.10.1, algorand-python 4.0.0, py-algorand-sdk 2.12.0, pytest 9.2.0, Python **3.12** inside the venv (the global Python is 3.15 and must not be used for this project), algod 5.1.1 on localnet.
+
+### Stages
+
+| Stage | Content | Status |
+|---|---|---|
+| 0 | Tooling health (algod, accounts, TEAL compile) | done, green |
+| 1 | `create` and input validation, immutable program | done, green |
+| 2 | Activation with the base balance payment (`APP_FUND`) | next |
+| 3 | Deposit and withdraw before lock, exact-amount lock, free surplus, counterparty deposit visible | |
+| 4 | `mark_paid` and `mark_shipped` | |
+| 5 | Confirmation code as an Ed25519 signature (`ed25519verify_bare`) over a message bound to the app id | |
+| 6 | Settlement and deletion | |
+| 7 | Adversarial tests: forged code, code from another contract, pre-funding the contract address, two transactions racing in one block | |
+
+Each stage adds a few lines to the contract and its own tests. The next stage starts only when the previous tests are green.
+
+### Design rules (from the project agreement)
+
+- No admin, no upgrade, no publisher key. Integrity is checked by the hash of the compiled TEAL, not the Python source.
+- Before lock, each party can withdraw at any time. When both deposits reach the agreed amount, **exactly that amount** is locked from each side; the surplus stays free and withdrawable.
+- No collateral is released before **both** confirmation codes are recorded. The deadline (`due_secs`) is informational and never releases funds.
+- A confirmation code must be the counterparty's Ed25519 signature over a message bound to the app id, so it cannot be replayed in another contract.
+- The contract stays neutral and has no right to intervene. Reputation (open contracts, duration, wallet age) is left to the market; the UI only warns.
+
+### Working rules for the code
+
+- **Terminal output (prints, test assertion messages, logs) must be in English.** Comments, docstrings and docs stay Persian.
+- Settings live only in `config.py`, not environment variables. The constants at the top of `contracts/lmarket.py` must match `config.py` (`test_constants_match` checks this).
+- All py-algorand-sdk calls live in `tests/helpers.py`, so an SDK version change touches one file.
+- Each rejection test proves two things: it was rejected, and for the expected assert message (`helpers.rejected`). Each rejection also has a passing "witness" with valid input.
+- Contract assert messages are English and must survive in the TEAL as comments (`test_teal_keeps_assert_messages`).
+- After every contract change: `python scripts/build.py`, then `pytest`. Record the new hash.
+
+### Known issues and open work
+
+- `GLOBAL_UINTS` and `GLOBAL_BYTES` in `config.py` are currently larger than needed. At the end, replace them with exact numbers, because every extra slot raises the creator's minimum balance.
+- There is still **no test for pre-funding the contract address** (before it exists) and no same-block race test; both arrive in stage 7.
+- `index.html` is not connected to the chain and still depends on the old `release.json` and `algosim`. It must be rewritten to read the TEAL hash from the chain.
+- This repository has not been security audited. Do not use it on mainnet without an independent audit.
+- The old publisher private key is still in git history; treat it as compromised (see "Security and repository history").
+- Commit `822ed8e` still carries the email `claude@anthropic.com` (cosmetic only).
+
+### Quick check of the current state (Windows, `(.venv)` active, localnet running)
+
+```powershell
+git pull
+python scripts/build.py
+pytest -q tests/test_00_smoke.py
+pytest -q tests/test_01_create.py
 ```
 
 ---
