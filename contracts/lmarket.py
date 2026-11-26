@@ -13,7 +13,7 @@ Lmarket — سفته‌ی دیجیتال روی Algorand (PuyaPy)
   * مهلت (due_secs) فقط اطلاع‌رسانی است و هرگز وجهی را آزاد نمی‌کند.
 """
 
-from algopy import Account, ARC4Contract, Global, GlobalState, Txn, UInt64, arc4, gtxn, log
+from algopy import Account, ARC4Contract, Global, GlobalState, Txn, UInt64, arc4, gtxn, itxn, log
 
 # ثابت‌ها: باید با config.py یکی باشند (تست test_constants_match بررسی می‌کند).
 MIN_AGREED = 100_000        # microAlgo
@@ -34,6 +34,9 @@ class Lmarket(ARC4Contract):
         self.created_at = GlobalState(UInt64)
         # ۰ = هنوز فعال نشده، ۱ = فعال شده (پرداخت APP_FUND ثبت شده)
         self.activated = GlobalState(UInt64)
+        # واریزی هر طرف (microAlgo)؛ برای هر دو طرف قابل خواندن است
+        self.buyer_dep = GlobalState(UInt64)
+        self.seller_dep = GlobalState(UInt64)
 
     @arc4.abimethod(create="require")
     def create(
@@ -60,6 +63,8 @@ class Lmarket(ARC4Contract):
         self.due_secs.value = due_secs.native
         self.created_at.value = Global.latest_timestamp
         self.activated.value = UInt64(0)
+        self.buyer_dep.value = UInt64(0)
+        self.seller_dep.value = UInt64(0)
 
         log("EVENT:created")
 
@@ -80,3 +85,51 @@ class Lmarket(ARC4Contract):
         self.activated.value = UInt64(1)
 
         log("EVENT:activated")
+
+    @arc4.abimethod
+    def deposit(self, pay: gtxn.PaymentTransaction) -> None:
+        """
+        واریز: خریدار یا فروشنده مبلغی به حساب قرارداد می‌فرستد و به واریزی خودش اضافه می‌شود.
+        (مرحله‌ی ۳الف: هنوز قفلی وجود ندارد؛ قفل در ۳ب می‌آید.)
+        """
+        log("EVENT:deposit_attempt")
+
+        assert self.activated.value == UInt64(1), "contract not activated"
+        assert (
+            Txn.sender == self.buyer.value or Txn.sender == self.seller.value
+        ), "only buyer or seller may deposit"
+        assert pay.sender == Txn.sender, "deposit payment sender must be the caller"
+        assert pay.receiver == Global.current_application_address, "deposit must go to the contract"
+        assert pay.amount > UInt64(0), "deposit must be positive"
+
+        if Txn.sender == self.buyer.value:
+            self.buyer_dep.value += pay.amount
+        else:
+            self.seller_dep.value += pay.amount
+
+        log("EVENT:deposited")
+
+    @arc4.abimethod
+    def withdraw(self, amount: arc4.UInt64) -> None:
+        """
+        برداشت: هر طرف فقط از واریزی خودش و فقط به آدرس خودش برمی‌دارد.
+        کارمزد تراکنش داخلی صفر است و فراخواننده کارمزد دو تراکنش را می‌پردازد.
+        """
+        log("EVENT:withdraw_attempt")
+
+        assert (
+            Txn.sender == self.buyer.value or Txn.sender == self.seller.value
+        ), "only buyer or seller may withdraw"
+        assert amount.native > UInt64(0), "withdraw must be positive"
+
+        # ابتدا حالت به‌روز می‌شود، سپس پول فرستاده می‌شود
+        if Txn.sender == self.buyer.value:
+            assert amount.native <= self.buyer_dep.value, "withdraw exceeds deposit"
+            self.buyer_dep.value -= amount.native
+        else:
+            assert amount.native <= self.seller_dep.value, "withdraw exceeds deposit"
+            self.seller_dep.value -= amount.native
+
+        itxn.Payment(receiver=Txn.sender, amount=amount.native, fee=0).submit()
+
+        log("EVENT:withdrawn")

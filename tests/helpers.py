@@ -179,6 +179,49 @@ def activate(app_id: int, creator: Actor, amount: int, receiver: str | None = No
     atc.execute(c, 4)
 
 
+def deposit(app_id: int, who: Actor, amount: int, receiver: str | None = None,
+            pay_from: Actor | None = None) -> None:
+    """
+    مرحله‌ی ۳الف: پرداخت + فراخوانی deposit در یک گروه.
+    pay_from: پرداخت‌کننده‌ی دیگر (برای آزمودن این‌که فرستنده‌ی پرداخت باید خود فراخواننده باشد).
+    """
+    c = algod_client()
+    sp = c.suggested_params()
+    payer = pay_from or who
+    pay = transaction.PaymentTxn(payer.address, sp, receiver or app_address(app_id), amount)
+    atc = AtomicTransactionComposer()
+    atc.add_method_call(
+        app_id=app_id,
+        method=abi.Method.from_signature("deposit(pay)void"),
+        sender=who.address,
+        sp=sp,
+        signer=who.signer,
+        method_args=[TransactionWithSigner(pay, payer.signer)],
+    )
+    atc.execute(c, 4)
+
+
+WITHDRAW_FEE = 2_000   # کارمزد تراکنش بیرونی + تراکنش داخلی، که فراخواننده می‌پردازد
+
+
+def withdraw(app_id: int, who: Actor, amount: int) -> None:
+    """مرحله‌ی ۳الف: برداشت از واریزی خود؛ کارمزد ثابت WITHDRAW_FEE است."""
+    c = algod_client()
+    sp = c.suggested_params()
+    sp.flat_fee = True
+    sp.fee = WITHDRAW_FEE
+    atc = AtomicTransactionComposer()
+    atc.add_method_call(
+        app_id=app_id,
+        method=abi.Method.from_signature("withdraw(uint64)void"),
+        sender=who.address,
+        sp=sp,
+        signer=who.signer,
+        method_args=[amount],
+    )
+    atc.execute(c, 4)
+
+
 def raw_app_txn(sender: Actor, kind: str, app_id: int) -> None:
     """update/delete خام (بدون ABI)؛ برای آزمودن این‌که برنامه تغییرناپذیر است."""
     c = algod_client()
@@ -253,7 +296,7 @@ def read_state(app_id: int) -> dict:
         key = base64.b64decode(kv["key"]).decode()
         v = kv["value"]
         if v["type"] == 2:
-            out[key] = v["uint"]
+            out[key] = v.get("uint", 0)
         else:
             raw = base64.b64decode(v["bytes"])
             out[key] = encoding.encode_address(raw) if len(raw) == 32 else raw
