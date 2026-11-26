@@ -66,7 +66,7 @@ lmarket/
 | ۱ | `create` و اعتبارسنجی ورودی‌ها، تغییرناپذیری برنامه | انجام و سبز |
 | ۲ | فعال‌سازی با پرداخت موجودی پایه (`APP_FUND`) | انجام و سبز |
 | ۳الف | `deposit` و `withdraw` پیش از قفل، دیدن واریزی طرف مقابل | انجام و سبز |
-| ۳ب | قفل دقیقِ مبلغ توافقی، مازاد آزاد و قابل برداشت | بعدی |
+| ۳ب | قفل دقیقِ مبلغ توافقی، مازاد آزاد و قابل برداشت | در انتظار تأیید تست |
 | ۴ | ثبت پرداخت (`mark_paid`) و ارسال (`mark_shipped`) | |
 | ۵ | کد تأیید با امضای Ed25519 (`ed25519verify_bare`) روی پیام وابسته به شناسه‌ی قرارداد | |
 | ۶ | تسویه و حذف قرارداد | |
@@ -373,7 +373,7 @@ lmarket/
 | 1 | `create` and input validation, immutable program | done, green |
 | 2 | Activation with the base balance payment (`APP_FUND`) | done, green |
 | 3a | `deposit` and `withdraw` before lock, counterparty deposit visible | done, green |
-| 3b | Exact-amount lock, free and withdrawable surplus | next |
+| 3b | Exact-amount lock, free and withdrawable surplus | awaiting test confirmation |
 | 4 | `mark_paid` and `mark_shipped` | |
 | 5 | Confirmation code as an Ed25519 signature (`ed25519verify_bare`) over a message bound to the app id | |
 | 6 | Settlement and deletion | |

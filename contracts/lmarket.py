@@ -37,6 +37,8 @@ class Lmarket(ARC4Contract):
         # واریزی هر طرف (microAlgo)؛ برای هر دو طرف قابل خواندن است
         self.buyer_dep = GlobalState(UInt64)
         self.seller_dep = GlobalState(UInt64)
+        # ۰ = قفل نشده، ۱ = از هر طرف دقیقاً agreed قفل شده (یک‌طرفه؛ برگشت ندارد)
+        self.locked = GlobalState(UInt64)
 
     @arc4.abimethod(create="require")
     def create(
@@ -65,6 +67,7 @@ class Lmarket(ARC4Contract):
         self.activated.value = UInt64(0)
         self.buyer_dep.value = UInt64(0)
         self.seller_dep.value = UInt64(0)
+        self.locked.value = UInt64(0)
 
         log("EVENT:created")
 
@@ -107,12 +110,22 @@ class Lmarket(ARC4Contract):
         else:
             self.seller_dep.value += pay.amount
 
+        # با رسیدن واریزی هر دو طرف به مبلغ توافقی، دقیقاً agreed از هر طرف قفل می‌شود؛
+        # مازاد آزاد می‌ماند (قفل یک پرچم است، نه جابه‌جایی پول)
+        if (
+            self.locked.value == UInt64(0)
+            and self.buyer_dep.value >= self.agreed.value
+            and self.seller_dep.value >= self.agreed.value
+        ):
+            self.locked.value = UInt64(1)
+            log("EVENT:locked")
+
         log("EVENT:deposited")
 
     @arc4.abimethod
     def withdraw(self, amount: arc4.UInt64) -> None:
         """
-        برداشت: هر طرف فقط از واریزی خودش و فقط به آدرس خودش برمی‌دارد.
+        برداشت: هر طرف فقط از واریزی خودش و فقط به آدرس خودش برمی‌دارد؛ پس از قفل فقط از مازاد.
         کارمزد تراکنش داخلی صفر است و فراخواننده کارمزد دو تراکنش را می‌پردازد.
         """
         log("EVENT:withdraw_attempt")
@@ -122,13 +135,20 @@ class Lmarket(ARC4Contract):
         ), "only buyer or seller may withdraw"
         assert amount.native > UInt64(0), "withdraw must be positive"
 
+        if Txn.sender == self.buyer.value:
+            dep = self.buyer_dep.value
+        else:
+            dep = self.seller_dep.value
+        assert amount.native <= dep, "withdraw exceeds deposit"
+        # پس از قفل، فقط مازاد بر agreed آزاد است (dep >= agreed از لحظه‌ی قفل همیشه برقرار است)
+        if self.locked.value == UInt64(1):
+            assert amount.native <= dep - self.agreed.value, "withdraw exceeds free balance"
+
         # ابتدا حالت به‌روز می‌شود، سپس پول فرستاده می‌شود
         if Txn.sender == self.buyer.value:
-            assert amount.native <= self.buyer_dep.value, "withdraw exceeds deposit"
-            self.buyer_dep.value -= amount.native
+            self.buyer_dep.value = dep - amount.native
         else:
-            assert amount.native <= self.seller_dep.value, "withdraw exceeds deposit"
-            self.seller_dep.value -= amount.native
+            self.seller_dep.value = dep - amount.native
 
         itxn.Payment(receiver=Txn.sender, amount=amount.native, fee=0).submit()
 
