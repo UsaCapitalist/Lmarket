@@ -13,12 +13,13 @@ Lmarket — سفته‌ی دیجیتال روی Algorand (PuyaPy)
   * مهلت (due_secs) فقط اطلاع‌رسانی است و هرگز وجهی را آزاد نمی‌کند.
 """
 
-from algopy import Account, ARC4Contract, Global, GlobalState, Txn, UInt64, arc4, log
+from algopy import Account, ARC4Contract, Global, GlobalState, Txn, UInt64, arc4, gtxn, log
 
 # ثابت‌ها: باید با config.py یکی باشند (تست test_constants_match بررسی می‌کند).
 MIN_AGREED = 100_000        # microAlgo
 MIN_DUE_SECS = 3_600
 MAX_DUE_SECS = 31_536_000
+APP_FUND = 1_200_000        # microAlgo؛ پرداخت فعال‌سازی برای حداقل موجودی حساب قرارداد
 
 
 class Lmarket(ARC4Contract):
@@ -31,6 +32,8 @@ class Lmarket(ARC4Contract):
         self.agreed = GlobalState(UInt64)
         self.due_secs = GlobalState(UInt64)
         self.created_at = GlobalState(UInt64)
+        # ۰ = هنوز فعال نشده، ۱ = فعال شده (پرداخت APP_FUND ثبت شده)
+        self.activated = GlobalState(UInt64)
 
     @arc4.abimethod(create="require")
     def create(
@@ -56,5 +59,24 @@ class Lmarket(ARC4Contract):
         self.agreed.value = agreed.native
         self.due_secs.value = due_secs.native
         self.created_at.value = Global.latest_timestamp
+        self.activated.value = UInt64(0)
 
         log("EVENT:created")
+
+    @arc4.abimethod
+    def activate(self, pay: gtxn.PaymentTransaction) -> None:
+        """
+        فعال‌سازی: سازنده با پرداختی به‌اندازه‌ی دقیق APP_FUND به حساب قرارداد،
+        حداقل موجودی لازم برای نگه‌داری حالت سراسری را تأمین می‌کند. فقط یک‌بار.
+        """
+        log("EVENT:activate_attempt")
+
+        assert self.activated.value == UInt64(0), "already activated"
+        assert Txn.sender == self.creator.value, "only creator may activate"
+        assert pay.sender == self.creator.value, "payment sender must be creator"
+        assert pay.receiver == Global.current_application_address, "payment must go to the contract"
+        assert pay.amount == APP_FUND, "activation payment must equal APP_FUND"
+
+        self.activated.value = UInt64(1)
+
+        log("EVENT:activated")

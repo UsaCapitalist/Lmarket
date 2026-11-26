@@ -13,10 +13,11 @@ import re
 import sys
 from dataclasses import dataclass
 
-from algosdk import abi, account, encoding, kmd, transaction
+from algosdk import abi, account, encoding, kmd, logic, transaction
 from algosdk.atomic_transaction_composer import (
     AccountTransactionSigner,
     AtomicTransactionComposer,
+    TransactionWithSigner,
 )
 from algosdk.error import AlgodHTTPError
 from algosdk.source_map import SourceMap
@@ -148,6 +149,34 @@ def deploy(creator: Actor, buyer: str, seller: str, agreed: int, due_secs: int) 
     app_id = c.pending_transaction_info(result.tx_ids[0])["application-index"]
     log.debug("deployed app_id=%d", app_id)
     return app_id
+
+
+def app_address(app_id: int) -> str:
+    return logic.get_application_address(app_id)
+
+
+def min_balance(addr: str) -> int:
+    return algod_client().account_info(addr)["min-balance"]
+
+
+def activate(app_id: int, creator: Actor, amount: int, receiver: str | None = None) -> None:
+    """
+    مرحله‌ی ۲: پرداخت به حساب قرارداد + فراخوانی activate در یک گروه.
+    receiver پیش‌فرض آدرس قرارداد است؛ برای آزمودن مقصد اشتباه می‌توان عوض کرد.
+    """
+    c = algod_client()
+    sp = c.suggested_params()
+    pay = transaction.PaymentTxn(creator.address, sp, receiver or app_address(app_id), amount)
+    atc = AtomicTransactionComposer()
+    atc.add_method_call(
+        app_id=app_id,
+        method=abi.Method.from_signature("activate(pay)void"),
+        sender=creator.address,
+        sp=sp,
+        signer=creator.signer,
+        method_args=[TransactionWithSigner(pay, creator.signer)],
+    )
+    atc.execute(c, 4)
 
 
 def raw_app_txn(sender: Actor, kind: str, app_id: int) -> None:

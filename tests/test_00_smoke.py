@@ -35,7 +35,7 @@ def test_programs_compile_on_algod():
 def test_constants_match():
     """ثابت‌های contracts/lmarket.py باید با config.py یکی باشند."""
     src = (helpers.ROOT / config.CONTRACT_FILE).read_text(encoding="utf-8")
-    for name in ("MIN_AGREED", "MIN_DUE_SECS", "MAX_DUE_SECS"):
+    for name in ("MIN_AGREED", "MIN_DUE_SECS", "MAX_DUE_SECS", "APP_FUND"):
         m = re.search(rf"^{name}\s*=\s*([\d_]+)", src, re.M)
         assert m, f"{name} not found in contract source"
         assert int(m.group(1).replace("_", "")) == getattr(config, name), name
@@ -47,7 +47,8 @@ def test_teal_keeps_assert_messages():
     این تست همان‌جا و با پیام روشن می‌شکند.
     """
     teal = helpers._build_path("approval").read_text(encoding="utf-8")
-    for msg in ("buyer and seller must differ", "only buyer or seller may create", "agreed below minimum"):
+    for msg in ("buyer and seller must differ", "only buyer or seller may create", "agreed below minimum",
+                "already activated", "only creator may activate", "activation payment must equal APP_FUND"):
         assert msg in teal, f"assert message {msg!r} missing from approval TEAL"
 
 

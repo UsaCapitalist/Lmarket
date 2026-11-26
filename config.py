@@ -29,3 +29,4 @@ GLOBAL_BYTES = 8
 MIN_AGREED = 100_000                 # microAlgo (۰٫۱ ALGO)
 MIN_DUE_SECS = 3_600                 # یک ساعت
 MAX_DUE_SECS = 31_536_000            # ۳۶۵ روز
+APP_FUND = 1_200_000                 # microAlgo؛ باید با حداقل موجودی حساب قرارداد (min-balance) بالاتر یا برابر باشد؛ تست stage 2 بررسی می‌کند
