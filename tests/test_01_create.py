@@ -1,23 +1,26 @@
 """
 مرحله‌ی ۱: ساخت قرارداد.
-هر تست رد‌شدن، یک «شاهد موفق» دارد (همان فراخوانی با ورودی درست می‌گذرد)
-تا مطمئن باشیم رد شدن به‌خاطر همان ورودی بد بوده، نه خرابی محیط.
+هر رد‌شدن دو چیز را ثابت می‌کند: (۱) رد شد، (۲) به همان دلیلِ مورد انتظار رد شد
+(پیام assert از روی TEAL و pc خوانده می‌شود)، و یک «شاهد موفق» با ورودی درست هم دارد.
 """
 import pytest
 
 import config
 import helpers
-from helpers import ALGO, REJECT_PATTERN, AlgodHTTPError
+from helpers import ALGO, AlgodHTTPError, rejected
 
 DAY = 86_400
+
+# پیام‌های assert قرارداد (باید با contracts/lmarket.py یکی باشند)
+R_SAME = "buyer and seller must differ"
+R_OUTSIDER = "only buyer or seller may create"
+R_AGREED = "agreed below minimum"
+R_DUE_LOW = "due_secs below minimum"
+R_DUE_HIGH = "due_secs above maximum"
 
 
 def make(creator, buyer, seller, agreed=5 * ALGO, due=7 * DAY):
     return helpers.deploy(creator, buyer.address, seller.address, agreed, due)
-
-
-def rejected(fn):
-    return pytest.raises(AlgodHTTPError, match=REJECT_PATTERN)
 
 
 # ---------------------------------------------------------------- مسیر موفق
@@ -40,13 +43,13 @@ def test_buyer_can_create(alice, bob):
 # ---------------------------------------------------------------- اعتبارسنجی
 def test_outsider_cannot_create(alice, bob, mallory):
     make(alice, bob, alice)                       # شاهد: خود طرف مجاز است
-    with rejected(None):
+    with rejected(R_OUTSIDER):
         make(mallory, bob, alice)
 
 
 def test_buyer_and_seller_must_differ(alice, bob):
     make(alice, bob, alice)                       # شاهد
-    with rejected(None):
+    with rejected(R_SAME):
         make(alice, alice, alice)
 
 
@@ -60,22 +63,22 @@ def test_agreed_boundaries(alice, bob, agreed, ok):
     if ok:
         make(alice, bob, alice, agreed=agreed)
     else:
-        with rejected(None):
+        with rejected(R_AGREED):
             make(alice, bob, alice, agreed=agreed)
 
 
-@pytest.mark.parametrize("due,ok", [
-    (config.MIN_DUE_SECS - 1, False),
-    (config.MIN_DUE_SECS, True),
-    (config.MAX_DUE_SECS, True),
-    (config.MAX_DUE_SECS + 1, False),
-    (0, False),
+@pytest.mark.parametrize("due,ok,reason", [
+    (config.MIN_DUE_SECS - 1, False, R_DUE_LOW),
+    (config.MIN_DUE_SECS, True, None),
+    (config.MAX_DUE_SECS, True, None),
+    (config.MAX_DUE_SECS + 1, False, R_DUE_HIGH),
+    (0, False, R_DUE_LOW),
 ])
-def test_due_boundaries(alice, bob, due, ok):
+def test_due_boundaries(alice, bob, due, ok, reason):
     if ok:
         make(alice, bob, alice, due=due)
     else:
-        with rejected(None):
+        with rejected(reason):
             make(alice, bob, alice, due=due)
 
 

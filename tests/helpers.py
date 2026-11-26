@@ -6,8 +6,10 @@
 (برای دیدن: pytest -s --log-cli-level=DEBUG).
 """
 import base64
+import contextlib
 import logging
 import pathlib
+import re
 import sys
 from dataclasses import dataclass
 
@@ -17,11 +19,13 @@ from algosdk.atomic_transaction_composer import (
     AtomicTransactionComposer,
 )
 from algosdk.error import AlgodHTTPError
+from algosdk.source_map import SourceMap
 from algosdk.v2client import algod
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 import config  # noqa: E402
+import pytest  # noqa: E402
 
 log = logging.getLogger("lmarket.test")
 
@@ -77,7 +81,7 @@ def dispenser() -> Actor:
 def send_payment(src: Actor, dst: str, amount: int) -> str:
     c = algod_client()
     txn = transaction.PaymentTxn(src.address, c.suggested_params(), dst, amount)
-    txid = c.send_transaction(txn.sign(src.sk))
+    txid = c.send_transaction(src.signer.sign_transactions([txn], [0])[0])
     transaction.wait_for_confirmation(c, txid, 4)
     log.debug("pay %s -> %s amount=%d txid=%s", src.name, dst[:8], amount, txid)
     return txid
@@ -105,7 +109,7 @@ def build_exists() -> bool:
 
 def compile_teal(kind: str) -> bytes:
     """TEAL کامپایل‌شده توسط puyapy را با algod به بایت‌کد تبدیل می‌کند."""
-    src = _build_path(kind).read_text()
+    src = _build_path(kind).read_text(encoding="utf-8")
     return base64.b64decode(algod_client().compile(src)["result"])
 
 
@@ -159,8 +163,56 @@ def raw_app_txn(sender: Actor, kind: str, app_id: int) -> None:
         txn = transaction.ApplicationOptInTxn(sender.address, sp, app_id)
     else:
         raise ValueError(kind)
-    txid = c.send_transaction(txn.sign(sender.sk))
+    txid = c.send_transaction(sender.signer.sign_transactions([txn], [0])[0])
     transaction.wait_for_confirmation(c, txid, 4)
+
+
+# ------------------------------------------------------------------ دلیل رد شدن
+def _message_from_teal(lines: list, idx: int):
+    """
+    puyapy پیام هر assert را کنار همان خط TEAL می‌نویسد، مثلاً `assert // agreed below minimum`.
+    خط نگاشت‌شده را (با تحمل خطای ±۱ در شماره‌گذاری) پیدا می‌کنیم و پیام را برمی‌گردانیم.
+    """
+    for j in (idx, idx - 1, idx + 1):
+        if 0 <= j < len(lines):
+            code, _, comment = lines[j].partition("//")
+            parts = code.split()
+            if parts and parts[0] in ("assert", "err") and comment.strip():
+                return comment.strip()
+    return None
+
+
+_sourcemap_cache: dict = {}
+
+
+def failure_reason(exc: Exception):
+    """پیام assert قرارداد را از روی pc موجود در خطای algod و نقشه‌ی منبع برمی‌گرداند (یا None)."""
+    m = re.search(r"pc=(\d+)", str(exc))
+    if not m:
+        return None
+    if "approval" not in _sourcemap_cache:
+        src = _build_path("approval").read_text(encoding="utf-8")
+        res = algod_client().compile(src, source_map=True)
+        _sourcemap_cache["approval"] = (SourceMap(res["sourcemap"]), src.splitlines())
+    sm, lines = _sourcemap_cache["approval"]
+    line = sm.get_line_for_pc(int(m.group(1)))
+    if line is None:
+        return None
+    return _message_from_teal(lines, line)
+
+
+@contextlib.contextmanager
+def rejected(expected_reason: str):
+    """بلاک باید با همین پیام assert رد شود؛ پذیرفته شدن یا رد شدن به دلیل دیگر، تست را می‌شکند."""
+    try:
+        yield
+    except AlgodHTTPError as e:
+        reason = failure_reason(e)
+        assert reason is not None and expected_reason in reason, (
+            f"rejected for the wrong reason: got {reason!r}, expected {expected_reason!r}; raw error: {e}")
+        log.debug("rejected as expected: %s", reason)
+    else:
+        pytest.fail(f"call was accepted but should have been rejected ({expected_reason!r})")
 
 
 # ------------------------------------------------------------------ خواندن وضعیت
@@ -180,4 +232,4 @@ def read_state(app_id: int) -> dict:
     return out
 
 
-__all__ = ["ALGO", "Actor", "AlgodHTTPError", "REJECT_PATTERN"]
+__all__ = ["ALGO", "Actor", "AlgodHTTPError", "REJECT_PATTERN", "rejected"]

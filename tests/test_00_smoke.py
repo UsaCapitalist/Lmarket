@@ -34,8 +34,27 @@ def test_programs_compile_on_algod():
 
 def test_constants_match():
     """ثابت‌های contracts/lmarket.py باید با config.py یکی باشند."""
-    src = (helpers.ROOT / config.CONTRACT_FILE).read_text()
+    src = (helpers.ROOT / config.CONTRACT_FILE).read_text(encoding="utf-8")
     for name in ("MIN_AGREED", "MIN_DUE_SECS", "MAX_DUE_SECS"):
         m = re.search(rf"^{name}\s*=\s*([\d_]+)", src, re.M)
         assert m, f"{name} not found in contract source"
         assert int(m.group(1).replace("_", "")) == getattr(config, name), name
+
+
+def test_teal_keeps_assert_messages():
+    """
+    تست‌های رد‌شدن به پیام assert تکیه می‌کنند. اگر کامپایلر پیام‌ها را در TEAL نگذاشته باشد،
+    این تست همان‌جا و با پیام روشن می‌شکند.
+    """
+    teal = helpers._build_path("approval").read_text(encoding="utf-8")
+    for msg in ("buyer and seller must differ", "only buyer or seller may create", "agreed below minimum"):
+        assert msg in teal, f"assert message {msg!r} missing from approval TEAL"
+
+
+def test_message_extraction_logic():
+    """منطق خالص استخراج پیام از خط TEAL (بدون زنجیره)."""
+    lines = ["#pragma version 10", "assert // agreed below minimum", "err // boom", "return"]
+    assert helpers._message_from_teal(lines, 1) == "agreed below minimum"
+    assert helpers._message_from_teal(lines, 2) == "boom"
+    assert helpers._message_from_teal(lines, 3) is None or helpers._message_from_teal(lines, 3) == "boom"
+    assert helpers._message_from_teal(lines, 0) == "agreed below minimum"   # تحمل خطای ±۱
