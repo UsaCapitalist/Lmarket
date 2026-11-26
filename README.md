@@ -10,7 +10,7 @@
 
 **ال مارکت** یک پروتکل معامله‌ی شخص به شخص روی Algorand است. دو طرفی که به هم اعتماد شخصی ندارند، هر کدام وثیقه‌ای به **مبلغ برابر** قفل می‌کنند. پرداخت و تحویل کالا بیرون از زنجیره انجام می‌شود و وثیقه‌ها فقط پس از ثبت **هر دو کد تأیید** آزاد می‌شوند.
 
-> **وضعیت این شاخه (`decentralized`):** شبیه‌ساز پایتون و کلید امضای ناشر از مخزن حذف شده‌اند. قرارداد هوشمند به‌صورت PuyaPy نوشته و روی Algorand (ابتدا localnet، سپس testnet) مستقر می‌شود. این شاخه هنوز **قرارداد نهایی ندارد**؛ قرارداد مرحله‌به‌مرحله ساخته می‌شود و فقط **مرحله‌ی ۱ (ساخت قرارداد)** و **مرحله‌ی ۲ (فعال‌سازی با `APP_FUND`)** انجام شده است. فقط موجودی پایه‌ی حساب قرارداد نگه‌داری می‌شود و وثیقه‌ای هنوز واریز نمی‌شود. جزئیات در بخش «وضعیت پروژه» پایین‌تر است.
+> **وضعیت این شاخه (`decentralized`):** شبیه‌ساز پایتون و کلید امضای ناشر از مخزن حذف شده‌اند. قرارداد هوشمند به‌صورت PuyaPy نوشته و روی Algorand (ابتدا localnet، سپس testnet) مستقر می‌شود. این شاخه هنوز **قرارداد نهایی ندارد**؛ قرارداد مرحله‌به‌مرحله ساخته می‌شود و فقط **مرحله‌ی ۱ (ساخت قرارداد)** و **مرحله‌ی ۲ (فعال‌سازی با `APP_FUND`)** انجام شده است. و **مرحله‌ی ۳الف (واریز و برداشت پیش از قفل)** هم انجام شده است. هنوز قفلی وجود ندارد و هر طرف هر لحظه واریزی خود را برمی‌دارد. جزئیات در بخش «وضعیت پروژه» پایین‌تر است.
 
 ### ایده‌ی اصلی
 
@@ -54,7 +54,7 @@ lmarket/
 
 ## وضعیت پروژه (برای ادامه‌ی کار، حتی با مدل یا توسعه‌دهنده‌ی دیگر)
 
-**آخرین وضعیت تأییدشده:** روی ویندوز با localnet الگوکیت، `tests/test_00_smoke.py` (۸ تست)، `tests/test_01_create.py` (۱۶ تست) و `tests/test_02_activate.py` (۸ تست) کاملاً سبز هستند. هش TEAL تأییدی در آن اجرا: `c7afc0eb103708f746881509b11c078b93a5083460e0d80ea63bbfe7f6226594`.
+**آخرین وضعیت تأییدشده:** روی ویندوز با localnet الگوکیت، `tests/test_00_smoke.py` (۸ تست)، `tests/test_01_create.py` (۱۶ تست) و `tests/test_02_activate.py` (۸ تست) و `tests/test_03a_deposit.py` (۱۴ تست) کاملاً سبز هستند. هش TEAL تأییدی در آن اجرا: `01564392fdd1a0ee6c3b75005f1181cad2db96bb047352c2d068a0e68e48b524`.
 
 **نسخه‌هایی که با آن‌ها کار کرده است:** AlgoKit 2.10.2، puyapy 5.10.1، algorand-python 4.0.0، py-algorand-sdk 2.12.0، pytest 9.2.0، Python **3.12** داخل venv (پایتون سراسری ۳٫۱۵ است و نباید برای پروژه استفاده شود)، algod 5.1.1 روی localnet.
 
@@ -65,7 +65,7 @@ lmarket/
 | ۰ | سلامت ابزارها (algod، حساب‌ها، کامپایل TEAL) | انجام و سبز |
 | ۱ | `create` و اعتبارسنجی ورودی‌ها، تغییرناپذیری برنامه | انجام و سبز |
 | ۲ | فعال‌سازی با پرداخت موجودی پایه (`APP_FUND`) | انجام و سبز |
-| ۳الف | `deposit` و `withdraw` پیش از قفل، دیدن واریزی طرف مقابل | در انتظار تأیید تست |
+| ۳الف | `deposit` و `withdraw` پیش از قفل، دیدن واریزی طرف مقابل | انجام و سبز |
 | ۳ب | قفل دقیقِ مبلغ توافقی، مازاد آزاد و قابل برداشت | بعدی |
 | ۴ | ثبت پرداخت (`mark_paid`) و ارسال (`mark_shipped`) | |
 | ۵ | کد تأیید با امضای Ed25519 (`ed25519verify_bare`) روی پیام وابسته به شناسه‌ی قرارداد | |
@@ -317,7 +317,7 @@ Apache License 2.0. فایل `LICENSE` را ببینید.
 
 **Lmarket** is a peer-to-peer trade protocol on Algorand. Two parties who do not trust each other each lock an **equal** amount of collateral. Payment and delivery happen off-chain, and collateral is released only after **both confirmation codes** are recorded.
 
-> **Status of this branch (`decentralized`):** the Python simulator and the publisher signing key have been removed from the tree. The smart contract is being written in PuyaPy and deployed to Algorand (localnet first, then testnet). **This branch does not yet contain the final contract**; it is built stage by stage and only **stage 1 (contract creation)** and **stage 2 (activation with `APP_FUND`)** are done. The contract holds only its base balance; no collateral can be deposited yet. See "Project status" below.
+> **Status of this branch (`decentralized`):** the Python simulator and the publisher signing key have been removed from the tree. The smart contract is being written in PuyaPy and deployed to Algorand (localnet first, then testnet). **This branch does not yet contain the final contract**; it is built stage by stage and only **stage 1 (contract creation)** and **stage 2 (activation with `APP_FUND`)** are done. **Stage 3a (deposit and withdraw before lock)** is also done. There is no lock yet; each party can withdraw its own deposit at any time. See "Project status" below.
 
 ### Core ideas
 
@@ -361,7 +361,7 @@ lmarket/
 
 ## Project status (for continuing with another model or developer)
 
-**Last verified state:** on Windows with AlgoKit localnet, `tests/test_00_smoke.py` (8 tests), `tests/test_01_create.py` (16 tests) and `tests/test_02_activate.py` (8 tests) are fully green. Approval TEAL sha256 in that run: `c7afc0eb103708f746881509b11c078b93a5083460e0d80ea63bbfe7f6226594`.
+**Last verified state:** on Windows with AlgoKit localnet, `tests/test_00_smoke.py` (8 tests), `tests/test_01_create.py` (16 tests) and `tests/test_02_activate.py` (8 tests) and `tests/test_03a_deposit.py` (14 tests) are fully green. Approval TEAL sha256 in that run: `01564392fdd1a0ee6c3b75005f1181cad2db96bb047352c2d068a0e68e48b524`.
 
 **Versions it worked with:** AlgoKit 2.10.2, puyapy 5.10.1, algorand-python 4.0.0, py-algorand-sdk 2.12.0, pytest 9.2.0, Python **3.12** inside the venv (the global Python is 3.15 and must not be used for this project), algod 5.1.1 on localnet.
 
@@ -372,7 +372,7 @@ lmarket/
 | 0 | Tooling health (algod, accounts, TEAL compile) | done, green |
 | 1 | `create` and input validation, immutable program | done, green |
 | 2 | Activation with the base balance payment (`APP_FUND`) | done, green |
-| 3a | `deposit` and `withdraw` before lock, counterparty deposit visible | awaiting test confirmation |
+| 3a | `deposit` and `withdraw` before lock, counterparty deposit visible | done, green |
 | 3b | Exact-amount lock, free and withdrawable surplus | next |
 | 4 | `mark_paid` and `mark_shipped` | |
 | 5 | Confirmation code as an Ed25519 signature (`ed25519verify_bare`) over a message bound to the app id | |
