@@ -13,13 +13,18 @@ Lmarket — سفته‌ی دیجیتال روی Algorand (PuyaPy)
 (activated, locked, paid, shipped) بدون تغییر می‌مانند. زمان از Global.latest_timestamp می‌آید
 (ثانیه؛ تقریبی و در حد چند ثانیه دقیق، مناسب مقیاس ساعت و روز، نه ساعت دقیق).
 
+===== مرحله‌ی ۵الف: ثبت کلید عمومی Ed25519 =====
+هر طرف (خریدار یا فروشنده) پس از فعال‌سازی، یک‌بار کلید عمومی خودش (۳۲ بایت) را همراه زمان ثبت می‌کند.
+فقط ثبت است: هنوز هیچ امضایی بررسی نمی‌شود (۵پ و ۵ت) و تعویض کلید در ۵الف۲ می‌آید.
+کلید پیش از ثبت اصلاً در حافظه نیست؛ «ثبت‌شده بودن» را فیلد *_key_at (۰ = ثبت نشده) نشان می‌دهد.
+
 قاعده‌ها (از توافق پروژه):
   * بدون مدیر و بدون امکان به‌روزرسانی.
   * فقط خریدار یا فروشنده می‌تواند قرارداد بسازد.
   * مهلت (due_secs) فقط اطلاع‌رسانی است و هرگز وجهی را آزاد نمی‌کند.
 """
 
-from algopy import Account, ARC4Contract, Global, GlobalState, Txn, UInt64, arc4, gtxn, itxn, log
+from algopy import Account, ARC4Contract, Bytes, Global, GlobalState, Txn, UInt64, arc4, gtxn, itxn, log
 
 # ثابت‌ها: باید با config.py یکی باشند (تست test_constants_match بررسی می‌کند).
 MIN_AGREED = 100_000        # microAlgo
@@ -54,6 +59,12 @@ class Lmarket(ARC4Contract):
         self.locked_at = GlobalState(UInt64)
         self.paid_at = GlobalState(UInt64)
         self.shipped_at = GlobalState(UInt64)
+        # کلید عمومی Ed25519 هر طرف (۳۲ بایت) و زمان ثبت آن؛ *_key_at = ۰ یعنی هنوز ثبت نشده
+        # (خود کلید تا پیش از ثبت در حافظه وجود ندارد)
+        self.buyer_key = GlobalState(Bytes)
+        self.seller_key = GlobalState(Bytes)
+        self.buyer_key_at = GlobalState(UInt64)
+        self.seller_key_at = GlobalState(UInt64)
 
     @arc4.abimethod(create="require")
     def create(
@@ -89,6 +100,8 @@ class Lmarket(ARC4Contract):
         self.locked_at.value = UInt64(0)
         self.paid_at.value = UInt64(0)
         self.shipped_at.value = UInt64(0)
+        self.buyer_key_at.value = UInt64(0)
+        self.seller_key_at.value = UInt64(0)
 
         log("EVENT:created")
 
@@ -211,3 +224,28 @@ class Lmarket(ARC4Contract):
         self.shipped_at.value = Global.latest_timestamp
 
         log("EVENT:shipped")
+
+    @arc4.abimethod
+    def register_key(self, key: arc4.DynamicBytes) -> None:
+        """
+        ثبت کلید عمومی Ed25519: هر طرف فقط برای خودش، فقط پس از فعال‌سازی و فقط یک‌بار.
+        صرفاً ثبت است؛ هیچ پولی جابه‌جا نمی‌شود و هیچ امضایی بررسی نمی‌شود.
+        """
+        log("EVENT:register_key_attempt")
+
+        assert self.activated.value == UInt64(1), "contract not activated"
+        assert (
+            Txn.sender == self.buyer.value or Txn.sender == self.seller.value
+        ), "only buyer or seller may register key"
+        assert key.native.length == UInt64(32), "key must be 32 bytes"
+
+        if Txn.sender == self.buyer.value:
+            assert self.buyer_key_at.value == UInt64(0), "key already registered"
+            self.buyer_key.value = key.native
+            self.buyer_key_at.value = Global.latest_timestamp
+        else:
+            assert self.seller_key_at.value == UInt64(0), "key already registered"
+            self.seller_key.value = key.native
+            self.seller_key_at.value = Global.latest_timestamp
+
+        log("EVENT:key_registered")
