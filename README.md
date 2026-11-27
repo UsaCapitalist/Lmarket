@@ -10,7 +10,7 @@
 
 **ال مارکت** یک پروتکل معامله‌ی شخص به شخص روی Algorand است. دو طرفی که به هم اعتماد شخصی ندارند، هر کدام وثیقه‌ای به **مبلغ برابر** قفل می‌کنند. پرداخت و تحویل کالا بیرون از زنجیره انجام می‌شود و وثیقه‌ها فقط پس از ثبت **هر دو کد تأیید** آزاد می‌شوند.
 
-> **وضعیت این شاخه (`decentralized`):** شبیه‌ساز پایتون و کلید امضای ناشر از مخزن حذف شده‌اند. قرارداد هوشمند به‌صورت PuyaPy نوشته و روی Algorand (ابتدا localnet، سپس testnet) مستقر می‌شود. این شاخه هنوز **قرارداد نهایی ندارد**؛ قرارداد مرحله‌به‌مرحله ساخته می‌شود و فقط **مرحله‌ی ۱ (ساخت قرارداد)** و **مرحله‌ی ۲ (فعال‌سازی با `APP_FUND`)** انجام شده است. و **مرحله‌ی ۳الف (واریز و برداشت پیش از قفل)** هم انجام شده است. **مرحله‌ی ۳ب (قفل دقیق مبلغ توافقی)** هم انجام شده است: با رسیدن واریزی هر دو طرف به مبلغ توافقی، دقیقاً همان مبلغ قفل می‌شود و فقط مازاد قابل برداشت است. **مرحله‌ی ۴الف (`mark_paid`)** هم انجام شده است؛ این ثبت فقط اعلام است و وجهی آزاد نمی‌کند. **مرحله‌ی ۴ب (`mark_shipped`)** هم انجام شده است (مستقل از `mark_paid` و فقط اعلام). **مرحله‌ی ۴پ (ثبت زمان رویدادها)** هم انجام شده است. **مرحله‌ی ۵الف (ثبت کلید عمومی Ed25519)** هم انجام شده است. هنوز کد تأیید و تسویه وجود ندارد. جزئیات در بخش «وضعیت پروژه» پایین‌تر است.
+> **وضعیت این شاخه (`decentralized`):** شبیه‌ساز پایتون و کلید امضای ناشر از مخزن حذف شده‌اند. قرارداد هوشمند به‌صورت PuyaPy نوشته و روی Algorand (ابتدا localnet، سپس testnet) مستقر می‌شود. این شاخه هنوز **قرارداد نهایی ندارد**؛ قرارداد مرحله‌به‌مرحله ساخته می‌شود و فقط **مرحله‌ی ۱ (ساخت قرارداد)** و **مرحله‌ی ۲ (فعال‌سازی با `APP_FUND`)** انجام شده است. و **مرحله‌ی ۳الف (واریز و برداشت پیش از قفل)** هم انجام شده است. **مرحله‌ی ۳ب (قفل دقیق مبلغ توافقی)** هم انجام شده است: با رسیدن واریزی هر دو طرف به مبلغ توافقی، دقیقاً همان مبلغ قفل می‌شود و فقط مازاد قابل برداشت است. **مرحله‌ی ۴الف (`mark_paid`)** هم انجام شده است؛ این ثبت فقط اعلام است و وجهی آزاد نمی‌کند. **مرحله‌ی ۴ب (`mark_shipped`)** هم انجام شده است (مستقل از `mark_paid` و فقط اعلام). **مرحله‌ی ۴پ (ثبت زمان رویدادها)** هم انجام شده است. **مرحله‌ی ۵الف (ثبت کلید عمومی Ed25519)** و **مرحله‌ی ۵الف۲ (تعویض کلید)** هم انجام شده است. هنوز کد تأیید و تسویه وجود ندارد. جزئیات در بخش «وضعیت پروژه» پایین‌تر است.
 
 ### ایده‌ی اصلی
 
@@ -54,7 +54,7 @@ lmarket/
 
 ## وضعیت پروژه (برای ادامه‌ی کار، حتی با مدل یا توسعه‌دهنده‌ی دیگر)
 
-**آخرین وضعیت تأییدشده:** روی ویندوز با localnet الگوکیت، `tests/test_00_smoke.py` (۸ تست)، `tests/test_01_create.py` (۱۶ تست) و `tests/test_02_activate.py` (۸ تست) `tests/test_03a_deposit.py` (۱۴ تست) و `tests/test_03b_lock.py` (۱۲ تست) `tests/test_04a_mark_paid.py` (۱۰ تست) و `tests/test_04b_mark_shipped.py` (۱۱ تست) و `tests/test_04c_timestamps.py` (۷ تست) و `tests/test_05a_register_key.py` (۱۰ تست) کاملاً سبز هستند (جمعاً ۹۶ تست؛ اجرا با `pytest -q`). هش TEAL تأییدی در آن اجرا: `8a1186e7f60afe861321ca92775921cc9ec8d8d5b9754bf28370f592d6433952`.
+**آخرین وضعیت تأییدشده:** روی ویندوز با localnet الگوکیت، `tests/test_00_smoke.py` (۸ تست)، `tests/test_01_create.py` (۱۶ تست) و `tests/test_02_activate.py` (۸ تست) `tests/test_03a_deposit.py` (۱۴ تست) و `tests/test_03b_lock.py` (۱۲ تست) `tests/test_04a_mark_paid.py` (۱۰ تست) و `tests/test_04b_mark_shipped.py` (۱۱ تست) و `tests/test_04c_timestamps.py` (۷ تست) و `tests/test_05a_register_key.py` (۱۰ تست) و `tests/test_05a2_rotate_key.py` (۱۱ تست) کاملاً سبز هستند (جمعاً ۱۰۷ تست؛ اجرا با `pytest -q`). هش TEAL تأییدی در آن اجرا: `4e21c1a458871b178e454064ba2f07c3980c035dc07127b53888a8564e324ebd`.
 
 **نسخه‌هایی که با آن‌ها کار کرده است:** AlgoKit 2.10.2، puyapy 5.10.1، algorand-python 4.0.0، py-algorand-sdk 2.12.0، pytest 9.2.0، Python **3.12** داخل venv (پایتون سراسری ۳٫۱۵ است و نباید برای پروژه استفاده شود)، algod 5.1.1 روی localnet.
 
@@ -71,6 +71,7 @@ lmarket/
 | ۴ب | ثبت ارسال (`mark_shipped`) توسط فروشنده | انجام و سبز |
 | ۴پ | ثبت زمان فعال‌سازی، قفل، پرداخت و ارسال (`activated_at`، `locked_at`، `paid_at`، `shipped_at`)؛ فقط ثبت‌اند | انجام و سبز |
 | ۵الف | ثبت کلید عمومی Ed25519 هر طرف، یک‌بار و با زمان (`register_key`)؛ فقط ثبت | انجام و سبز |
+| ۵الف۲ | تعویض کلید (`rotate_key`)، با زمان و شمارنده‌ی تعویض؛ قفل‌شدن کلید پس از ثبت کد در ۵ث می‌آید | انجام و سبز |
 | ۵ | کد تأیید با امضای Ed25519 (`ed25519verify_bare`) روی پیام وابسته به شناسه‌ی قرارداد | |
 | ۶ | تسویه و حذف قرارداد | |
 | ۷ | تست‌های خصمانه: کد جعلی، کد قرارداد دیگر، پیش‌پرداخت به آدرس قرارداد، رقابت دو تراکنش در یک بلوک | |
@@ -96,7 +97,7 @@ lmarket/
 
 ### مشکلات شناخته‌شده و کارهای باز
 
-- پس از ۴پ، حافظه‌ی سراسری ۱۳ uint و ۳ بایت دارد (قبل از آن ۹ uint). پس از ۵الف: ۱۵ uint و ۵ بایت. `GLOBAL_UINTS` و `GLOBAL_BYTES` در `config.py` فعلاً بزرگ‌تر از نیاز هستند. در پایان باید با عدد دقیق جایگزین شوند، چون هر اسلات اضافه موجودی حداقلِ سازنده را بالا می‌برد.
+- پس از ۴پ، حافظه‌ی سراسری ۱۳ uint و ۳ بایت دارد (قبل از آن ۹ uint). پس از ۵الف۲: ۱۷ uint و ۵ بایت (`GLOBAL_UINTS` موقتاً ۲۴). `GLOBAL_UINTS` و `GLOBAL_BYTES` در `config.py` فعلاً بزرگ‌تر از نیاز هستند. در پایان باید با عدد دقیق جایگزین شوند، چون هر اسلات اضافه موجودی حداقلِ سازنده را بالا می‌برد.
 - هنوز **تست پیش‌پرداخت به آدرس قرارداد** (قبل از ساخته شدن) و تست رقابت در یک بلوک وجود ندارد؛ در مرحله‌ی ۷ می‌آیند.
 - `index.html` هنوز به زنجیره وصل نیست و به `release.json` و `algosim` قدیمی وابسته است. باید بازنویسی شود و هش TEAL را از زنجیره بخواند.
 - این مخزن حسابرسی امنیتی نشده است. استفاده روی mainnet بدون حسابرسی مستقل ممنوع است.
@@ -320,7 +321,7 @@ Apache License 2.0. فایل `LICENSE` را ببینید.
 
 **Lmarket** is a peer-to-peer trade protocol on Algorand. Two parties who do not trust each other each lock an **equal** amount of collateral. Payment and delivery happen off-chain, and collateral is released only after **both confirmation codes** are recorded.
 
-> **Status of this branch (`decentralized`):** the Python simulator and the publisher signing key have been removed from the tree. The smart contract is being written in PuyaPy and deployed to Algorand (localnet first, then testnet). **This branch does not yet contain the final contract**; it is built stage by stage and only **stage 1 (contract creation)** and **stage 2 (activation with `APP_FUND`)** are done. **Stage 3a (deposit and withdraw before lock)** is also done. **Stage 3b (exact-amount lock)** is also done: once both deposits reach the agreed amount, exactly that amount locks and only the surplus is withdrawable. **Stage 4a (`mark_paid`)** is also done; it is a declaration only and releases nothing. **Stage 4b (`mark_shipped`)** is also done (independent of `mark_paid`, declaration only). **Stage 4c (event timestamps)** is also done. **Stage 5a (Ed25519 public key registration)** is also done. There is still no confirmation code or settlement. See "Project status" below.
+> **Status of this branch (`decentralized`):** the Python simulator and the publisher signing key have been removed from the tree. The smart contract is being written in PuyaPy and deployed to Algorand (localnet first, then testnet). **This branch does not yet contain the final contract**; it is built stage by stage and only **stage 1 (contract creation)** and **stage 2 (activation with `APP_FUND`)** are done. **Stage 3a (deposit and withdraw before lock)** is also done. **Stage 3b (exact-amount lock)** is also done: once both deposits reach the agreed amount, exactly that amount locks and only the surplus is withdrawable. **Stage 4a (`mark_paid`)** is also done; it is a declaration only and releases nothing. **Stage 4b (`mark_shipped`)** is also done (independent of `mark_paid`, declaration only). **Stage 4c (event timestamps)** is also done. **Stage 5a (Ed25519 public key registration)** and **stage 5a2 (key rotation)** are also done. There is still no confirmation code or settlement. See "Project status" below.
 
 ### Core ideas
 
@@ -364,7 +365,7 @@ lmarket/
 
 ## Project status (for continuing with another model or developer)
 
-**Last verified state:** on Windows with AlgoKit localnet, `tests/test_00_smoke.py` (8 tests), `tests/test_01_create.py` (16 tests) and `tests/test_02_activate.py` (8 tests) `tests/test_03a_deposit.py` (14 tests) and `tests/test_03b_lock.py` (12 tests) `tests/test_04a_mark_paid.py` (10 tests) and `tests/test_04b_mark_shipped.py` (11 tests) and `tests/test_04c_timestamps.py` (7 tests) and `tests/test_05a_register_key.py` (10 tests) are fully green (96 tests in total; run with `pytest -q`). Approval TEAL sha256 in that run: `8a1186e7f60afe861321ca92775921cc9ec8d8d5b9754bf28370f592d6433952`.
+**Last verified state:** on Windows with AlgoKit localnet, `tests/test_00_smoke.py` (8 tests), `tests/test_01_create.py` (16 tests) and `tests/test_02_activate.py` (8 tests) `tests/test_03a_deposit.py` (14 tests) and `tests/test_03b_lock.py` (12 tests) `tests/test_04a_mark_paid.py` (10 tests) and `tests/test_04b_mark_shipped.py` (11 tests) and `tests/test_04c_timestamps.py` (7 tests) and `tests/test_05a_register_key.py` (10 tests) and `tests/test_05a2_rotate_key.py` (11 tests) are fully green (107 tests in total; run with `pytest -q`). Approval TEAL sha256 in that run: `4e21c1a458871b178e454064ba2f07c3980c035dc07127b53888a8564e324ebd`.
 
 **Versions it worked with:** AlgoKit 2.10.2, puyapy 5.10.1, algorand-python 4.0.0, py-algorand-sdk 2.12.0, pytest 9.2.0, Python **3.12** inside the venv (the global Python is 3.15 and must not be used for this project), algod 5.1.1 on localnet.
 
@@ -381,6 +382,7 @@ lmarket/
 | 4b | `mark_shipped` by the seller | done, green |
 | 4c | record the time of activation, lock, paid and shipped (`activated_at`, `locked_at`, `paid_at`, `shipped_at`); record-only | done, green |
 | 5a | `register_key`: each party's Ed25519 public key, once, with time; record-only | done, green |
+| 5a2 | `rotate_key`, with time and rotation counter; freezing a key after its code is recorded comes in 5d | done, green |
 | 5 | Confirmation code as an Ed25519 signature (`ed25519verify_bare`) over a message bound to the app id | |
 | 6 | Settlement and deletion | |
 | 7 | Adversarial tests: forged code, code from another contract, pre-funding the contract address, two transactions racing in one block | |
@@ -406,7 +408,7 @@ Each stage adds a few lines to the contract and its own tests. The next stage st
 
 ### Known issues and open work
 
-- After 4c the global state holds 13 uints and 3 byte slices (9 uints before). After 5a: 15 uints and 5 byte slices. `GLOBAL_UINTS` and `GLOBAL_BYTES` in `config.py` are currently larger than needed. At the end, replace them with exact numbers, because every extra slot raises the creator's minimum balance.
+- After 4c the global state holds 13 uints and 3 byte slices (9 uints before). After 5a2: 17 uints and 5 byte slices (`GLOBAL_UINTS` temporarily 24). `GLOBAL_UINTS` and `GLOBAL_BYTES` in `config.py` are currently larger than needed. At the end, replace them with exact numbers, because every extra slot raises the creator's minimum balance.
 - There is still **no test for pre-funding the contract address** (before it exists) and no same-block race test; both arrive in stage 7.
 - `index.html` is not connected to the chain and still depends on the old `release.json` and `algosim`. It must be rewritten to read the TEAL hash from the chain.
 - This repository has not been security audited. Do not use it on mainnet without an independent audit.
