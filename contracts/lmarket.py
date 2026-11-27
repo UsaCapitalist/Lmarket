@@ -26,7 +26,14 @@ Lmarket — سفته‌ی دیجیتال روی Algorand (PuyaPy)
 ===== مرحله‌ی ۵پ: ساخت پیام امضا =====
 متد فقط‌خواندنی message(role) پیامی را برمی‌گرداند که هر طرف برای کد تأیید امضا می‌کند. قالب و دلیل هر فیلد
 در tests/signing_message.py آمده است؛ همه‌ی مقدارها از حافظه‌ی خود قرارداد (نه ورودی کاربر) می‌آیند.
-فقط پس از قفل تعریف‌شده است. هنوز امضایی بررسی نمی‌شود (۵ت).
+فقط پس از قفل تعریف‌شده است.
+
+===== مرحله‌ی ۵ت: بررسی امضای کد تأیید =====
+متد verify_code(role, sig) فقط درستی امضا را می‌سنجد (ed25519verify_bare روی همان پیام ۵پ با کلید ثبت‌شده‌ی
+امضاکننده: نقش ۱ = کلید فروشنده، نقش ۲ = کلید خریدار) و اگر نادرست باشد رد می‌شود. هیچ حالتی تغییر
+نمی‌کند و هیچ پولی جابه‌جا نمی‌شود؛ ثبت کد در ۵ث می‌آید. ساخت پیام در یک تابع مشترک است تا پیام
+بررسی‌شده همیشه با خروجی message() یکی باشد. بودجه‌ی اجرا (۱۹۰۰ واحد برای بررسی امضا) با
+ensure_budget تأمین می‌شود و کارمزد تراکنش‌های کمکی را فراخواننده می‌پردازد (گروه‌اعتبار).
 
 قاعده‌ها (از توافق پروژه):
   * بدون مدیر و بدون امکان به‌روزرسانی.
@@ -34,7 +41,23 @@ Lmarket — سفته‌ی دیجیتال روی Algorand (PuyaPy)
   * مهلت (due_secs) فقط اطلاع‌رسانی است و هرگز وجهی را آزاد نمی‌کند.
 """
 
-from algopy import Account, ARC4Contract, Bytes, Global, GlobalState, Txn, UInt64, arc4, gtxn, itxn, log, op
+from algopy import (
+    Account,
+    ARC4Contract,
+    Bytes,
+    Global,
+    GlobalState,
+    OpUpFeeSource,
+    Txn,
+    UInt64,
+    arc4,
+    ensure_budget,
+    gtxn,
+    itxn,
+    log,
+    op,
+    subroutine,
+)
 
 # ثابت‌ها: باید با config.py یکی باشند (تست test_constants_match بررسی می‌کند).
 MIN_AGREED = 100_000        # microAlgo
@@ -303,9 +326,14 @@ class Lmarket(ARC4Contract):
         assert self.locked.value == UInt64(1), "message requires lock"
         assert role.native == UInt64(1) or role.native == UInt64(2), "invalid role"
 
-        msg = (
+        return arc4.DynamicBytes(self._build_message(role.native))
+
+    @subroutine
+    def _build_message(self, role: UInt64) -> Bytes:
+        """پیام امضا (قالب در tests/signing_message.py)؛ تنها منبع ساخت پیام، برای message() و بررسی امضا."""
+        return (
             Bytes(b"LMARKET-V1")
-            + op.extract(op.itob(role.native), UInt64(7), UInt64(1))
+            + op.extract(op.itob(role), UInt64(7), UInt64(1))
             + Global.genesis_hash
             + op.itob(Global.current_application_id.id)
             + self.buyer.value.bytes
@@ -316,4 +344,33 @@ class Lmarket(ARC4Contract):
             + op.itob(self.activated_at.value)
             + op.itob(self.locked_at.value)
         )
-        return arc4.DynamicBytes(msg)
+
+    @subroutine
+    def _verify(self, role: UInt64, sig: Bytes) -> None:
+        """درستی امضای کد تأیید را می‌سنجد؛ نقش ۱ با کلید فروشنده و نقش ۲ با کلید خریدار."""
+        ensure_budget(UInt64(2500), OpUpFeeSource.GroupCredit)
+
+        assert self.locked.value == UInt64(1), "message requires lock"
+        assert role == UInt64(1) or role == UInt64(2), "invalid role"
+
+        if role == UInt64(1):
+            assert self.seller_key_at.value != UInt64(0), "signer key not registered"
+            key = self.seller_key.value
+        else:
+            assert self.buyer_key_at.value != UInt64(0), "signer key not registered"
+            key = self.buyer_key.value
+        assert sig.length == UInt64(64), "signature must be 64 bytes"
+
+        assert op.ed25519verify_bare(self._build_message(role), sig, key), "invalid signature"
+
+    @arc4.abimethod
+    def verify_code(self, role: arc4.UInt8, sig: arc4.DynamicBytes) -> None:
+        """
+        بررسی امضای کد تأیید (۵ت): فقط می‌سنجد و رد یا قبول می‌کند؛ حالتی را تغییر نمی‌دهد.
+        هر کسی می‌تواند فراخوانی کند (برای پیش‌بررسی در رابط). کارمزد باید بودجه‌ی اضافی را بپوشاند.
+        """
+        log("EVENT:verify_code_attempt")
+
+        self._verify(role.native, sig.native)
+
+        log("EVENT:code_verified")

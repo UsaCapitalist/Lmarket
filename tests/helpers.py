@@ -280,6 +280,27 @@ def message(app_id: int, who: Actor, role: int) -> bytes:
     return bytes(res.abi_results[0].return_value)
 
 
+VERIFY_FEE = 5_000   # بررسی امضا بودجه‌ی اضافی می‌خواهد؛ تراکنش‌های کمکیِ ensure_budget از همین کارمزد پرداخت می‌شوند
+
+
+def verify_code(app_id: int, who: Actor, role: int, sig: bytes) -> None:
+    """مرحله‌ی ۵ت: بررسی امضای کد تأیید (آرگومان‌ها: uint8 و byte[])؛ کارمزد ثابت VERIFY_FEE."""
+    c = algod_client()
+    sp = c.suggested_params()
+    sp.flat_fee = True
+    sp.fee = VERIFY_FEE
+    atc = AtomicTransactionComposer()
+    atc.add_method_call(
+        app_id=app_id,
+        method=abi.Method.from_signature("verify_code(uint8,byte[])void"),
+        sender=who.address,
+        sp=sp,
+        signer=who.signer,
+        method_args=[role, sig],
+    )
+    atc.execute(c, 4)
+
+
 WITHDRAW_FEE = 2_000   # کارمزد تراکنش بیرونی + تراکنش داخلی، که فراخواننده می‌پردازد
 
 
