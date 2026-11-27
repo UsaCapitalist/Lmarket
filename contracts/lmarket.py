@@ -23,13 +23,18 @@ Lmarket — سفته‌ی دیجیتال روی Algorand (PuyaPy)
 کلید فعلی و *_key_n تعداد تعویض‌هاست (برای اعتبارسنجی). محدودیت تعداد وجود ندارد و تعویض فقط
 اعلام است. قفل‌شدن کلید پس از ثبت کدی که با آن امضا شده، همراه ثبت کد (۵ث) می‌آید.
 
+===== مرحله‌ی ۵پ: ساخت پیام امضا =====
+متد فقط‌خواندنی message(role) پیامی را برمی‌گرداند که هر طرف برای کد تأیید امضا می‌کند. قالب و دلیل هر فیلد
+در tests/signing_message.py آمده است؛ همه‌ی مقدارها از حافظه‌ی خود قرارداد (نه ورودی کاربر) می‌آیند.
+فقط پس از قفل تعریف‌شده است. هنوز امضایی بررسی نمی‌شود (۵ت).
+
 قاعده‌ها (از توافق پروژه):
   * بدون مدیر و بدون امکان به‌روزرسانی.
   * فقط خریدار یا فروشنده می‌تواند قرارداد بسازد.
   * مهلت (due_secs) فقط اطلاع‌رسانی است و هرگز وجهی را آزاد نمی‌کند.
 """
 
-from algopy import Account, ARC4Contract, Bytes, Global, GlobalState, Txn, UInt64, arc4, gtxn, itxn, log
+from algopy import Account, ARC4Contract, Bytes, Global, GlobalState, Txn, UInt64, arc4, gtxn, itxn, log, op
 
 # ثابت‌ها: باید با config.py یکی باشند (تست test_constants_match بررسی می‌کند).
 MIN_AGREED = 100_000        # microAlgo
@@ -287,3 +292,28 @@ class Lmarket(ARC4Contract):
             self.seller_key_n.value += UInt64(1)
 
         log("EVENT:key_rotated")
+
+    @arc4.abimethod(readonly=True)
+    def message(self, role: arc4.UInt8) -> arc4.DynamicBytes:
+        """
+        پیام امضا برای کد تأیید (طول ثابت ۱۵۵ بایت؛ قالب در tests/signing_message.py).
+        نقش: ۱ = فروشنده دریافت وجه را تأیید می‌کند، ۲ = خریدار دریافت کالا را تأیید می‌کند.
+        همه‌ی مقدارها از حافظه‌ی قرارداد می‌آیند و فقط پس از قفل تعریف می‌شود؛ هیچ حالتی تغییر نمی‌کند.
+        """
+        assert self.locked.value == UInt64(1), "message requires lock"
+        assert role.native == UInt64(1) or role.native == UInt64(2), "invalid role"
+
+        msg = (
+            Bytes(b"LMARKET-V1")
+            + op.extract(op.itob(role.native), UInt64(7), UInt64(1))
+            + Global.genesis_hash
+            + op.itob(Global.current_application_id.id)
+            + self.buyer.value.bytes
+            + self.seller.value.bytes
+            + op.itob(self.agreed.value)
+            + op.itob(self.due_secs.value)
+            + op.itob(self.created_at.value)
+            + op.itob(self.activated_at.value)
+            + op.itob(self.locked_at.value)
+        )
+        return arc4.DynamicBytes(msg)

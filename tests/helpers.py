@@ -259,6 +259,27 @@ def rotate_key(app_id: int, who: Actor, key: bytes) -> None:
     atc.execute(c, 4)
 
 
+def genesis_hash() -> bytes:
+    """هش ژنسیس شبکه‌ی جاری (۳۲ بایت)؛ بخشی از پیام امضا."""
+    return base64.b64decode(algod_client().suggested_params().gh)
+
+
+def message(app_id: int, who: Actor, role: int) -> bytes:
+    """مرحله‌ی ۵پ: پیام امضای ساخته‌شده توسط قرارداد (فقط‌خواندنی)."""
+    c = algod_client()
+    atc = AtomicTransactionComposer()
+    atc.add_method_call(
+        app_id=app_id,
+        method=abi.Method.from_signature("message(uint8)byte[]"),
+        sender=who.address,
+        sp=c.suggested_params(),
+        signer=who.signer,
+        method_args=[role],
+    )
+    res = atc.execute(c, 4)
+    return bytes(res.abi_results[0].return_value)
+
+
 WITHDRAW_FEE = 2_000   # کارمزد تراکنش بیرونی + تراکنش داخلی، که فراخواننده می‌پردازد
 
 
