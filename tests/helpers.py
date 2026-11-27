@@ -244,6 +244,21 @@ def register_key(app_id: int, who: Actor, key: bytes) -> None:
     atc.execute(c, 4)
 
 
+def rotate_key(app_id: int, who: Actor, key: bytes) -> None:
+    """مرحله‌ی ۵الف۲: تعویض کلید عمومی Ed25519 (آرگومان: byte[])."""
+    c = algod_client()
+    atc = AtomicTransactionComposer()
+    atc.add_method_call(
+        app_id=app_id,
+        method=abi.Method.from_signature("rotate_key(byte[])void"),
+        sender=who.address,
+        sp=c.suggested_params(),
+        signer=who.signer,
+        method_args=[key],
+    )
+    atc.execute(c, 4)
+
+
 WITHDRAW_FEE = 2_000   # کارمزد تراکنش بیرونی + تراکنش داخلی، که فراخواننده می‌پردازد
 
 

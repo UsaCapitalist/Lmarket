@@ -18,6 +18,11 @@ Lmarket — سفته‌ی دیجیتال روی Algorand (PuyaPy)
 فقط ثبت است: هنوز هیچ امضایی بررسی نمی‌شود (۵پ و ۵ت) و تعویض کلید در ۵الف۲ می‌آید.
 کلید پیش از ثبت اصلاً در حافظه نیست؛ «ثبت‌شده بودن» را فیلد *_key_at (۰ = ثبت نشده) نشان می‌دهد.
 
+===== مرحله‌ی ۵الف۲: تعویض کلید =====
+هر طرف می‌تواند کلید ثبت‌شده‌ی خودش را با کلید تازه عوض کند (کلید قبلی منسوخ می‌شود). *_key_at زمان
+کلید فعلی و *_key_n تعداد تعویض‌هاست (برای اعتبارسنجی). محدودیت تعداد وجود ندارد و تعویض فقط
+اعلام است. قفل‌شدن کلید پس از ثبت کدی که با آن امضا شده، همراه ثبت کد (۵ث) می‌آید.
+
 قاعده‌ها (از توافق پروژه):
   * بدون مدیر و بدون امکان به‌روزرسانی.
   * فقط خریدار یا فروشنده می‌تواند قرارداد بسازد.
@@ -65,6 +70,9 @@ class Lmarket(ARC4Contract):
         self.seller_key = GlobalState(Bytes)
         self.buyer_key_at = GlobalState(UInt64)
         self.seller_key_at = GlobalState(UInt64)
+        # تعداد دفعاتی که هر طرف کلیدش را عوض کرده (ثبت اول حساب نمی‌شود)
+        self.buyer_key_n = GlobalState(UInt64)
+        self.seller_key_n = GlobalState(UInt64)
 
     @arc4.abimethod(create="require")
     def create(
@@ -102,6 +110,8 @@ class Lmarket(ARC4Contract):
         self.shipped_at.value = UInt64(0)
         self.buyer_key_at.value = UInt64(0)
         self.seller_key_at.value = UInt64(0)
+        self.buyer_key_n.value = UInt64(0)
+        self.seller_key_n.value = UInt64(0)
 
         log("EVENT:created")
 
@@ -249,3 +259,31 @@ class Lmarket(ARC4Contract):
             self.seller_key_at.value = Global.latest_timestamp
 
         log("EVENT:key_registered")
+
+    @arc4.abimethod
+    def rotate_key(self, key: arc4.DynamicBytes) -> None:
+        """
+        تعویض کلید: هر طرف فقط کلید خودش را، فقط پس از ثبت اول، و فقط با کلیدی متفاوت از کلید فعلی.
+        کلید قبلی منسوخ می‌شود؛ زمان کلید فعلی به‌روز و شمارنده‌ی تعویض یکی زیاد می‌شود.
+        """
+        log("EVENT:rotate_key_attempt")
+
+        assert (
+            Txn.sender == self.buyer.value or Txn.sender == self.seller.value
+        ), "only buyer or seller may rotate key"
+        assert key.native.length == UInt64(32), "key must be 32 bytes"
+
+        if Txn.sender == self.buyer.value:
+            assert self.buyer_key_at.value != UInt64(0), "key not registered"
+            assert self.buyer_key.value != key.native, "new key must differ"
+            self.buyer_key.value = key.native
+            self.buyer_key_at.value = Global.latest_timestamp
+            self.buyer_key_n.value += UInt64(1)
+        else:
+            assert self.seller_key_at.value != UInt64(0), "key not registered"
+            assert self.seller_key.value != key.native, "new key must differ"
+            self.seller_key.value = key.native
+            self.seller_key_at.value = Global.latest_timestamp
+            self.seller_key_n.value += UInt64(1)
+
+        log("EVENT:key_rotated")
