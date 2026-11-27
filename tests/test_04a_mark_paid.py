@@ -49,7 +49,7 @@ def test_mark_paid_moves_no_money_and_changes_no_other_state(alice, bob):
     helpers.mark_paid(app, bob)
     after = helpers.read_state(app)
     assert helpers.balance(addr) == before_bal
-    assert {k: v for k, v in after.items() if k != "paid"} == {k: v for k, v in before.items() if k != "paid"}
+    assert {k: v for k, v in after.items() if k not in ("paid", "paid_at")} == {k: v for k, v in before.items() if k not in ("paid", "paid_at")}
 
 
 def test_seller_cannot_mark_paid(alice, bob):

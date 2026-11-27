@@ -49,7 +49,7 @@ def test_mark_shipped_moves_no_money_and_changes_no_other_state(alice, bob):
     helpers.mark_shipped(app, alice)
     after = helpers.read_state(app)
     assert helpers.balance(addr) == before_bal
-    assert {k: v for k, v in after.items() if k != "shipped"} == {k: v for k, v in before.items() if k != "shipped"}
+    assert {k: v for k, v in after.items() if k not in ("shipped", "shipped_at")} == {k: v for k, v in before.items() if k not in ("shipped", "shipped_at")}
 
 
 def test_buyer_cannot_mark_shipped(alice, bob):

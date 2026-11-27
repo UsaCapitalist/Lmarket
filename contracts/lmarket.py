@@ -7,6 +7,12 @@ Lmarket — سفته‌ی دیجیتال روی Algorand (PuyaPy)
   * هیچ متد update/delete/opt-in وجود ندارد؛ پس برنامه تغییرناپذیر است.
 واریز، قفل، کد تأیید و تسویه در مراحل بعد اضافه می‌شوند.
 
+===== مرحله‌ی ۴پ: زمان وقوع رویدادها =====
+برای اعتبارسنجی در لایه‌های بالاتر، زمان هر رویداد مهم (فعال‌سازی، قفل، پرداخت، ارسال) در حافظه‌ی
+قرارداد ثبت می‌شود. زمان‌ها فقط ثبت‌اند و هیچ منطق مالی به آن‌ها وابسته نیست. پرچم‌های قبلی
+(activated, locked, paid, shipped) بدون تغییر می‌مانند. زمان از Global.latest_timestamp می‌آید
+(ثانیه؛ تقریبی و در حد چند ثانیه دقیق، مناسب مقیاس ساعت و روز، نه ساعت دقیق).
+
 قاعده‌ها (از توافق پروژه):
   * بدون مدیر و بدون امکان به‌روزرسانی.
   * فقط خریدار یا فروشنده می‌تواند قرارداد بسازد.
@@ -43,6 +49,11 @@ class Lmarket(ARC4Contract):
         self.paid = GlobalState(UInt64)
         # ۱ = فروشنده ارسال را ثبت کرده (فقط اطلاع‌رسانی؛ مستقل از paid و بدون آزادسازی وجه)
         self.shipped = GlobalState(UInt64)
+        # زمان وقوع هر رویداد (ثانیه‌ی یونیکس)؛ ۰ = هنوز رخ نداده. فقط ثبت‌اند و منطقی به آن‌ها وابسته نیست.
+        self.activated_at = GlobalState(UInt64)
+        self.locked_at = GlobalState(UInt64)
+        self.paid_at = GlobalState(UInt64)
+        self.shipped_at = GlobalState(UInt64)
 
     @arc4.abimethod(create="require")
     def create(
@@ -74,6 +85,10 @@ class Lmarket(ARC4Contract):
         self.locked.value = UInt64(0)
         self.paid.value = UInt64(0)
         self.shipped.value = UInt64(0)
+        self.activated_at.value = UInt64(0)
+        self.locked_at.value = UInt64(0)
+        self.paid_at.value = UInt64(0)
+        self.shipped_at.value = UInt64(0)
 
         log("EVENT:created")
 
@@ -92,6 +107,7 @@ class Lmarket(ARC4Contract):
         assert pay.amount == APP_FUND, "activation payment must equal APP_FUND"
 
         self.activated.value = UInt64(1)
+        self.activated_at.value = Global.latest_timestamp
 
         log("EVENT:activated")
 
@@ -124,6 +140,7 @@ class Lmarket(ARC4Contract):
             and self.seller_dep.value >= self.agreed.value
         ):
             self.locked.value = UInt64(1)
+            self.locked_at.value = Global.latest_timestamp
             log("EVENT:locked")
 
         log("EVENT:deposited")
@@ -173,6 +190,7 @@ class Lmarket(ARC4Contract):
         assert self.paid.value == UInt64(0), "already marked paid"
 
         self.paid.value = UInt64(1)
+        self.paid_at.value = Global.latest_timestamp
 
         log("EVENT:paid")
 
@@ -190,5 +208,6 @@ class Lmarket(ARC4Contract):
         assert self.shipped.value == UInt64(0), "already marked shipped"
 
         self.shipped.value = UInt64(1)
+        self.shipped_at.value = Global.latest_timestamp
 
         log("EVENT:shipped")
