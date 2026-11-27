@@ -33,6 +33,11 @@ def locked_app(alice, bob, agreed=AGREED, due=7 * DAY):
     return app
 
 
+def rich_parties():
+    """چند قرارداد قفل‌شده در یک تست به ALGO بیشتری از ۱۰ ALGO فیکسچرها نیاز دارد (وثیقه + حداقل موجودی هر برنامه)."""
+    return helpers.new_actor("alice_rich", funded=40 * ALGO), helpers.new_actor("bob_rich", funded=40 * ALGO)
+
+
 def expected(app, role):
     s = helpers.read_state(app)
     return sm.build_message(
@@ -89,14 +94,16 @@ def test_message_is_deterministic_and_caller_independent(alice, bob, mallory):
     assert helpers.message(app, mallory, 1) == a                  # فراخواننده روی پیام اثر ندارد
 
 
-def test_different_contracts_give_different_messages(alice, bob):
+def test_different_contracts_give_different_messages():
+    alice, bob = rich_parties()
     a, b = locked_app(alice, bob), locked_app(alice, bob)        # پارامترها یکی؛ شناسه‌ی قرارداد فرق دارد
     ma, mb = helpers.message(a, bob, 1), helpers.message(b, bob, 1)
     assert ma != mb
     assert ma == expected(a, 1) and mb == expected(b, 1)
 
 
-def test_message_binds_agreed_amount_and_duration(alice, bob):
+def test_message_binds_agreed_amount_and_duration():
+    alice, bob = rich_parties()
     a = locked_app(alice, bob, agreed=AGREED, due=7 * DAY)
     b = locked_app(alice, bob, agreed=AGREED + 1, due=7 * DAY)
     c = locked_app(alice, bob, agreed=AGREED, due=8 * DAY)
