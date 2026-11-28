@@ -125,9 +125,21 @@ def _log_app_logs(result) -> None:
                 log.debug("app-log(bytes): %s", raw.hex())
 
 
+PAGE_SIZE = 2_048   # سقف حجم برنامه (تأییدی + clear) در هر صفحه؛ بیشتر از آن صفحه‌ی اضافه می‌خواهد (حداکثر ۳)
+
+
+def extra_pages_needed(approval: bytes, clear: bytes) -> int:
+    """تعداد صفحه‌ی اضافه‌ی لازم برای برنامه (هر صفحه‌ی اضافه ۰٫۱ ALGO به حداقل موجودی سازنده می‌افزاید)."""
+    pages = -(-(len(approval) + len(clear)) // PAGE_SIZE)
+    return max(0, pages - 1)
+
+
 def deploy(creator: Actor, buyer: str, seller: str, agreed: int, due_secs: int) -> int:
     """قرارداد را می‌سازد و app_id را برمی‌گرداند. اگر منطق رد کند AlgodHTTPError می‌دهد."""
     c = algod_client()
+    approval, clear = compile_teal("approval"), compile_teal("clear")
+    extra = extra_pages_needed(approval, clear)
+    log.debug("program size approval=%d clear=%d extra_pages=%d", len(approval), len(clear), extra)
     atc = AtomicTransactionComposer()
     atc.add_method_call(
         app_id=0,
@@ -137,10 +149,11 @@ def deploy(creator: Actor, buyer: str, seller: str, agreed: int, due_secs: int) 
         signer=creator.signer,
         method_args=[buyer, seller, agreed, due_secs],
         on_complete=transaction.OnComplete.NoOpOC,
-        approval_program=compile_teal("approval"),
-        clear_program=compile_teal("clear"),
+        approval_program=approval,
+        clear_program=clear,
         global_schema=transaction.StateSchema(config.GLOBAL_UINTS, config.GLOBAL_BYTES),
         local_schema=transaction.StateSchema(0, 0),
+        extra_pages=extra,
     )
     log.debug("deploy by=%s buyer=%s seller=%s agreed=%d due=%d",
               creator.name, buyer[:8], seller[:8], agreed, due_secs)
