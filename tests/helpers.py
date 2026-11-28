@@ -422,4 +422,23 @@ def read_state(app_id: int) -> dict:
     return out
 
 
+def withdraw_logs(app_id: int, who: Actor, amount: int) -> list:
+    """مرحله‌ی 5f: مثل withdraw ولی logهای تراکنش برنامه را (به‌صورت bytes) برمی‌گرداند."""
+    c = algod_client()
+    sp = c.suggested_params()
+    sp.flat_fee = True
+    sp.fee = WITHDRAW_FEE
+    atc = AtomicTransactionComposer()
+    atc.add_method_call(
+        app_id=app_id,
+        method=abi.Method.from_signature("withdraw(uint64)void"),
+        sender=who.address,
+        sp=sp,
+        signer=who.signer,
+        method_args=[amount],
+    )
+    res = atc.execute(c, 4)
+    return [base64.b64decode(x) for x in res.abi_results[0].tx_info.get("logs", [])]
+
+
 __all__ = ["ALGO", "Actor", "AlgodHTTPError", "REJECT_PATTERN", "rejected"]

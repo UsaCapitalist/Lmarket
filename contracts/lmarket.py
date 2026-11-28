@@ -41,6 +41,11 @@ ensure_budget تأمین می‌شود و کارمزد تراکنش‌های ک�
 زمان ثبت می‌ماند (خود امضا نه). ترتیب نسبت به mark_paid و mark_shipped آزاد است. پس از ثبت کد، کلید امضاکننده
 قفل می‌شود (rotate_key رد می‌شود). هنوز هیچ وجهی آزاد نمی‌شود؛ تسویه در 6a می‌آید.
 
+===== مرحله‌ی 5f: رکورد ساختاریافته‌ی برداشت =====
+هر withdraw موفق علاوه بر log قبلی، یک رکورد با قالب ثابت log می‌کند (EVENT:withdrawn_v1 + برداشت‌کننده + مبلغ
++ زمان + قفل‌بودن + واریزی طرف مقابل + واریزی باقی‌مانده). برای اعتبارسنجی است: برداشت پس از واریز کامل طرف
+مقابل و پیش از قفل نشانه‌ی معطل‌کردن است. هیچ قاعده‌ی مالی عوض نمی‌شود.
+
 ===== مرحله‌ی 5e: ثبت طرفِ تکمیل‌کننده‌ی قفل =====
 در لحظه‌ی قفل، فرستنده‌ی واریزی که قفل را کامل کرد در locked_by ثبت می‌شود (خریدار یا فروشنده). فقط ثبت است و
 هیچ قاعده‌ی مالی به آن وابسته نیست؛ برای اعتبارسنجی می‌گوید کدام طرف زمان قفل را به تأخیر انداخته است.
@@ -240,8 +245,24 @@ class Lmarket(ARC4Contract):
         # ابتدا حالت به‌روز می‌شود، سپس پول فرستاده می‌شود
         if Txn.sender == self.buyer.value:
             self.buyer_dep.value = dep - amount.native
+            who = Bytes(b"B")
+            other_dep = self.seller_dep.value
         else:
             self.seller_dep.value = dep - amount.native
+            who = Bytes(b"S")
+            other_dep = self.buyer_dep.value
+
+        # رکورد ساختاریافته‌ی برداشت (5f) برای اعتبارسنجی؛ قالب ثابت، پس از پیشوند ۱۸بایتی:
+        # برداشت‌کننده(1: B خریدار / S فروشنده) | مبلغ(8) | زمان(8) | قفل‌بودن(1) | واریزی طرف مقابل(8) | واریزی باقی‌مانده‌ی خودش(8)
+        log(
+            Bytes(b"EVENT:withdrawn_v1"),
+            who,
+            op.itob(amount.native),
+            op.itob(Global.latest_timestamp),
+            op.extract(op.itob(self.locked.value), UInt64(7), UInt64(1)),
+            op.itob(other_dep),
+            op.itob(dep - amount.native),
+        )
 
         itxn.Payment(receiver=Txn.sender, amount=amount.native, fee=0).submit()
 
