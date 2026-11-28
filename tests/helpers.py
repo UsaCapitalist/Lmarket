@@ -182,7 +182,7 @@ def activate(app_id: int, creator: Actor, amount: int, receiver: str | None = No
 def deposit(app_id: int, who: Actor, amount: int, receiver: str | None = None,
             pay_from: Actor | None = None) -> None:
     """
-    مرحله‌ی ۳الف: پرداخت + فراخوانی deposit در یک گروه.
+    مرحله‌ی 3a: پرداخت + فراخوانی deposit در یک گروه.
     pay_from: پرداخت‌کننده‌ی دیگر (برای آزمودن این‌که فرستنده‌ی پرداخت باید خود فراخواننده باشد).
     """
     c = algod_client()
@@ -202,7 +202,7 @@ def deposit(app_id: int, who: Actor, amount: int, receiver: str | None = None,
 
 
 def mark_paid(app_id: int, who: Actor) -> None:
-    """مرحله‌ی ۴الف: ثبت پرداخت توسط خریدار (بدون آرگومان)."""
+    """مرحله‌ی 4a: ثبت پرداخت توسط خریدار (بدون آرگومان)."""
     c = algod_client()
     atc = AtomicTransactionComposer()
     atc.add_method_call(
@@ -216,7 +216,7 @@ def mark_paid(app_id: int, who: Actor) -> None:
 
 
 def mark_shipped(app_id: int, who: Actor) -> None:
-    """مرحله‌ی ۴ب: ثبت ارسال توسط فروشنده (بدون آرگومان)."""
+    """مرحله‌ی 4b: ثبت ارسال توسط فروشنده (بدون آرگومان)."""
     c = algod_client()
     atc = AtomicTransactionComposer()
     atc.add_method_call(
@@ -230,7 +230,7 @@ def mark_shipped(app_id: int, who: Actor) -> None:
 
 
 def register_key(app_id: int, who: Actor, key: bytes) -> None:
-    """مرحله‌ی ۵الف: ثبت کلید عمومی Ed25519 (آرگومان: byte[])."""
+    """مرحله‌ی 5a: ثبت کلید عمومی Ed25519 (آرگومان: byte[])."""
     c = algod_client()
     atc = AtomicTransactionComposer()
     atc.add_method_call(
@@ -245,7 +245,7 @@ def register_key(app_id: int, who: Actor, key: bytes) -> None:
 
 
 def rotate_key(app_id: int, who: Actor, key: bytes) -> None:
-    """مرحله‌ی ۵الف۲: تعویض کلید عمومی Ed25519 (آرگومان: byte[])."""
+    """مرحله‌ی 5a2: تعویض کلید عمومی Ed25519 (آرگومان: byte[])."""
     c = algod_client()
     atc = AtomicTransactionComposer()
     atc.add_method_call(
@@ -265,7 +265,7 @@ def genesis_hash() -> bytes:
 
 
 def message(app_id: int, who: Actor, role: int) -> bytes:
-    """مرحله‌ی ۵پ: پیام امضای ساخته‌شده توسط قرارداد (فقط‌خواندنی)."""
+    """مرحله‌ی 5b: پیام امضای ساخته‌شده توسط قرارداد (فقط‌خواندنی)."""
     c = algod_client()
     atc = AtomicTransactionComposer()
     atc.add_method_call(
@@ -284,7 +284,7 @@ WITHDRAW_FEE = 2_000   # کارمزد تراکنش بیرونی + تراکنش �
 
 
 def withdraw(app_id: int, who: Actor, amount: int) -> None:
-    """مرحله‌ی ۳الف: برداشت از واریزی خود؛ کارمزد ثابت WITHDRAW_FEE است."""
+    """مرحله‌ی 3a: برداشت از واریزی خود؛ کارمزد ثابت WITHDRAW_FEE است."""
     c = algod_client()
     sp = c.suggested_params()
     sp.flat_fee = True
