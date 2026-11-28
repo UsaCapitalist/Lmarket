@@ -41,6 +41,10 @@ ensure_budget تأمین می‌شود و کارمزد تراکنش‌های ک�
 زمان ثبت می‌ماند (خود امضا نه). ترتیب نسبت به mark_paid و mark_shipped آزاد است. پس از ثبت کد، کلید امضاکننده
 قفل می‌شود (rotate_key رد می‌شود). هنوز هیچ وجهی آزاد نمی‌شود؛ تسویه در 6a می‌آید.
 
+===== مرحله‌ی 5e: ثبت طرفِ تکمیل‌کننده‌ی قفل =====
+در لحظه‌ی قفل، فرستنده‌ی واریزی که قفل را کامل کرد در locked_by ثبت می‌شود (خریدار یا فروشنده). فقط ثبت است و
+هیچ قاعده‌ی مالی به آن وابسته نیست؛ برای اعتبارسنجی می‌گوید کدام طرف زمان قفل را به تأخیر انداخته است.
+
 قاعده‌ها (از توافق پروژه):
   * بدون مدیر و بدون امکان به‌روزرسانی.
   * فقط خریدار یا فروشنده می‌تواند قرارداد بسازد.
@@ -110,6 +114,9 @@ class Lmarket(ARC4Contract):
         # زمان ثبت کد هر طرف (۰ = هنوز ثبت نشده): seller_code_at = کد فروشنده (نقش ۱)، buyer_code_at = کد خریدار (نقش ۲)
         self.seller_code_at = GlobalState(UInt64)
         self.buyer_code_at = GlobalState(UInt64)
+        # طرفی که با واریزش قفل را کامل کرد (برای اعتبارسنجی: چه کسی طرف مقابل را در انتظار نگه داشت)؛
+        # تا پیش از قفل در حافظه وجود ندارد
+        self.locked_by = GlobalState(Account)
 
     @arc4.abimethod(create="require")
     def create(
@@ -203,6 +210,7 @@ class Lmarket(ARC4Contract):
         ):
             self.locked.value = UInt64(1)
             self.locked_at.value = Global.latest_timestamp
+            self.locked_by.value = Txn.sender
             log("EVENT:locked")
 
         log("EVENT:deposited")

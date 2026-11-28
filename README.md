@@ -78,11 +78,12 @@ lmarket/
 | `5b` | `message(role)`: پیام امضای ۱۵۵ بایتی با قالب ثابت و بردار تست | انجام و سبز | 9 |
 | `5c` | `verify_code`: بررسی امضا با `ed25519verify_bare` (چیزی ثبت نمی‌کند) | انجام و سبز | 11 |
 | `5d` | `submit_code`: ثبت کد هر طرف با زمان، یک‌بار برای هر نقش؛ پس از ثبت، کلید امضاکننده قفل می‌شود | انجام و سبز | 12 |
-| `5e` | ثبت اینکه کدام طرف قفل را کامل کرد (`locked_by`) برای اعتبارسنجی | پیشنهادی (نیازمند تصمیم) |  |
-| `5f` | log ساختاریافته‌ی `withdraw` (مبلغ، زمان، وضعیت قفل و واریزی طرف مقابل) | پیشنهادی (نیازمند تصمیم) |  |
+| `5e` | ثبت اینکه کدام طرف قفل را کامل کرد (`locked_by`) برای اعتبارسنجی | نوشته‌شده؛ در انتظار اجرا روی localnet | 8 |
+| `5f` | log ساختاریافته‌ی `withdraw` (مبلغ، زمان، وضعیت قفل و واریزی طرف مقابل) | برنامه‌ریزی‌شده | |
+| `5g` | سوختن به‌اندازه‌ی انتخاب سازنده (`burn`، پیش‌فرض صفر): سازنده هنگام ساخت مقدار را تعیین و هنگام فعال‌سازی می‌پردازد؛ هر چه بیشتر، ارزش قرارداد در اعتبار بیشتر | برنامه‌ریزی‌شده | |
 | `6a` | `settle`: پس از ثبت هر دو کد، بازگشت وثیقه‌ها و ثبت رکورد نهایی نسخه‌دار در log | برنامه‌ریزی‌شده |  |
 | `6b` | `delete`: فقط پس از تسویه؛ بازگرداندن `APP_FUND` به سازنده | برنامه‌ریزی‌شده |  |
-| `6c` | پاک‌سازی قراردادِ هرگز قفل‌نشده و بدون واریزی | پیشنهادی (نیازمند تصمیم) |  |
+| `6c` | پاک‌سازی قراردادِ هرگز قفل‌نشده و بدون واریزی | برنامه‌ریزی‌شده | |
 | `7a` | تست خصمانه: کد جعلی و کد قرارداد دیگر، سرتاسری | برنامه‌ریزی‌شده |  |
 | `7b` | تست خصمانه: پیش‌پرداخت به آدرس قرارداد | برنامه‌ریزی‌شده |  |
 | `7c` | تست خصمانه: رقابت دو تراکنش در یک بلوک (گروه) | برنامه‌ریزی‌شده |  |
@@ -412,11 +413,12 @@ lmarket/
 | `5b` | `message(role)`: 155-byte signing message, fixed layout and test vector | done, green | 9 |
 | `5c` | `verify_code`: `ed25519verify_bare` check (records nothing) | done, green | 11 |
 | `5d` | `submit_code`: record each party's code with time, once per role; the signer's key freezes afterwards | done, green | 12 |
-| `5e` | Record which party completed the lock (`locked_by`) for reputation | proposed (needs decision) |  |
-| `5f` | Structured `withdraw` log (amount, time, lock state, counterparty deposit) | proposed (needs decision) |  |
+| `5e` | Record which party completed the lock (`locked_by`) for reputation | written; awaiting localnet run | 8 |
+| `5f` | Structured `withdraw` log (amount, time, lock state, counterparty deposit) | planned | |
+| `5g` | Creator-chosen burn (`burn`, default 0): set at creation, paid at activation; the more burned, the more the contract counts in reputation | planned | |
 | `6a` | `settle`: after both codes, return collateral and log a versioned final record | planned |  |
 | `6b` | `delete`: only after settlement; return `APP_FUND` to the creator | planned |  |
-| `6c` | Clean-up of a contract that never locked and holds no deposits | proposed (needs decision) |  |
+| `6c` | Clean-up of a contract that never locked and holds no deposits | planned | |
 | `7a` | Adversarial: forged code and code from another contract, end to end | planned |  |
 | `7b` | Adversarial: pre-funding the contract address | planned |  |
 | `7c` | Adversarial: two transactions racing in one block (group) | planned |  |
