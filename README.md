@@ -10,7 +10,7 @@
 
 **ال مارکت** یک پروتکل معامله‌ی شخص به شخص روی Algorand است. دو طرفی که به هم اعتماد شخصی ندارند، هر کدام وثیقه‌ای به **مبلغ برابر** قفل می‌کنند. پرداخت و تحویل کالا بیرون از زنجیره انجام می‌شود و وثیقه‌ها فقط پس از ثبت **هر دو کد تأیید** آزاد می‌شوند.
 
-> **وضعیت این شاخه (`decentralized`):** شبیه‌ساز پایتون و کلید امضای ناشر از مخزن حذف شده‌اند. قرارداد هوشمند به‌صورت PuyaPy نوشته و روی Algorand (ابتدا localnet، سپس testnet) مستقر می‌شود. این شاخه هنوز **قرارداد نهایی ندارد**؛ قرارداد مرحله‌به‌مرحله ساخته می‌شود و فقط **مرحله‌ی ۱ (ساخت قرارداد)** و **مرحله‌ی ۲ (فعال‌سازی با `APP_FUND`)** انجام شده است. و **مرحله‌ی ۳الف (واریز و برداشت پیش از قفل)** هم انجام شده است. **مرحله‌ی ۳ب (قفل دقیق مبلغ توافقی)** هم انجام شده است: با رسیدن واریزی هر دو طرف به مبلغ توافقی، دقیقاً همان مبلغ قفل می‌شود و فقط مازاد قابل برداشت است. **مرحله‌ی ۴الف (`mark_paid`)** هم انجام شده است؛ این ثبت فقط اعلام است و وجهی آزاد نمی‌کند. **مرحله‌ی ۴ب (`mark_shipped`)** هم انجام شده است (مستقل از `mark_paid` و فقط اعلام). **مرحله‌ی ۴پ (ثبت زمان رویدادها)** هم انجام شده است. **مرحله‌ی ۵الف (ثبت کلید عمومی Ed25519)** و **مرحله‌ی ۵الف۲ (تعویض کلید)** و **مرحله‌ی ۵پ (ساخت پیام امضا)** هم انجام شده است. هنوز کد تأیید و تسویه وجود ندارد. جزئیات در بخش «وضعیت پروژه» پایین‌تر است.
+> **وضعیت این شاخه (`decentralized`):** قرارداد PuyaPy مرحله‌به‌مرحله ساخته می‌شود و هنوز **قرارداد نهایی ندارد**. مرحله‌ها تا `5b` انجام و سبز هستند (۱۱۶ تست)؛ `5c` نوشته شده و منتظر اجرا روی localnet است. فهرست کامل مرحله‌ها در «مرحله‌ها» و گزارش ادامه‌ی کار در `docs/PROGRESS.md` است. هر شناسه‌ی مرحله با نام شاخه (`stage-<شناسه>-…`)، فایل تست (`test_<شناسه>_….py`) و عنوان commit (`Stage <شناسه>:`) یکی است.
 
 ### ایده‌ی اصلی
 
@@ -54,28 +54,47 @@ lmarket/
 
 ## وضعیت پروژه (برای ادامه‌ی کار، حتی با مدل یا توسعه‌دهنده‌ی دیگر)
 
-**آخرین وضعیت تأییدشده:** روی ویندوز با localnet الگوکیت، `tests/test_00_smoke.py` (۸ تست)، `tests/test_01_create.py` (۱۶ تست) و `tests/test_02_activate.py` (۸ تست) `tests/test_03a_deposit.py` (۱۴ تست) و `tests/test_03b_lock.py` (۱۲ تست) `tests/test_04a_mark_paid.py` (۱۰ تست) و `tests/test_04b_mark_shipped.py` (۱۱ تست) و `tests/test_04c_timestamps.py` (۷ تست) و `tests/test_05a_register_key.py` (۱۰ تست) و `tests/test_05a2_rotate_key.py` (۱۱ تست) و `tests/test_05b_message.py` (۹ تست) کاملاً سبز هستند (جمعاً ۱۱۶ تست؛ اجرا با `pytest -q`). هش TEAL تأییدی در آن اجرا: `db24bb28ff7c72e714c1e3a0960f3b59c34c8703a5151165634091d958f480d4`.
+**آخرین وضعیت تأییدشده:** روی ویندوز با localnet الگوکیت، همه‌ی تست‌های مرحله‌های `0` تا `5b` سبز هستند (۱۱۶ تست؛ اجرا با `pytest -q`). هش TEAL تأییدی در آن اجرا: `db24bb28ff7c72e714c1e3a0960f3b59c34c8703a5151165634091d958f480d4`. مرحله‌ی `5c` هنوز اجرا نشده است.
 
 **نسخه‌هایی که با آن‌ها کار کرده است:** AlgoKit 2.10.2، puyapy 5.10.1، algorand-python 4.0.0، py-algorand-sdk 2.12.0، pytest 9.2.0، Python **3.12** داخل venv (پایتون سراسری ۳٫۱۵ است و نباید برای پروژه استفاده شود)، algod 5.1.1 روی localnet.
 
 ### مرحله‌ها
 
-| مرحله | محتوا | وضعیت |
-|---|---|---|
-| ۰ | سلامت ابزارها (algod، حساب‌ها، کامپایل TEAL) | انجام و سبز |
-| ۱ | `create` و اعتبارسنجی ورودی‌ها، تغییرناپذیری برنامه | انجام و سبز |
-| ۲ | فعال‌سازی با پرداخت موجودی پایه (`APP_FUND`) | انجام و سبز |
-| ۳الف | `deposit` و `withdraw` پیش از قفل، دیدن واریزی طرف مقابل | انجام و سبز |
-| ۳ب | قفل دقیقِ مبلغ توافقی، مازاد آزاد و قابل برداشت | انجام و سبز |
-| ۴الف | ثبت پرداخت (`mark_paid`) توسط خریدار | انجام و سبز |
-| ۴ب | ثبت ارسال (`mark_shipped`) توسط فروشنده | انجام و سبز |
-| ۴پ | ثبت زمان فعال‌سازی، قفل، پرداخت و ارسال (`activated_at`، `locked_at`، `paid_at`، `shipped_at`)؛ فقط ثبت‌اند | انجام و سبز |
-| ۵الف | ثبت کلید عمومی Ed25519 هر طرف، یک‌بار و با زمان (`register_key`)؛ فقط ثبت | انجام و سبز |
-| ۵الف۲ | تعویض کلید (`rotate_key`)، با زمان و شمارنده‌ی تعویض؛ قفل‌شدن کلید پس از ثبت کد در ۵ث می‌آید | انجام و سبز |
-| ۵پ | پیام امضا: متد فقط‌خواندنی `message(role)` با قالب ثابت ۱۵۵ بایتی و بردار تست (`tests/signing_message.py`) | انجام و سبز |
-| ۵ | کد تأیید با امضای Ed25519 (`ed25519verify_bare`) روی پیام وابسته به شناسه‌ی قرارداد | |
-| ۶ | تسویه و حذف قرارداد | |
-| ۷ | تست‌های خصمانه: کد جعلی، کد قرارداد دیگر، پیش‌پرداخت به آدرس قرارداد، رقابت دو تراکنش در یک بلوک | |
+| شناسه | محتوا | وضعیت | تست‌ها |
+|---|---|---|---|
+| `0` | سلامت ابزارها (algod، حساب‌ها، کامپایل TEAL) | انجام و سبز | 8 |
+| `1` | `create` و اعتبارسنجی ورودی‌ها، تغییرناپذیری برنامه | انجام و سبز | 16 |
+| `2` | `activate` با پرداخت `APP_FUND` | انجام و سبز | 8 |
+| `3a` | `deposit` و `withdraw` پیش از قفل، دیدن واریزی طرف مقابل | انجام و سبز | 14 |
+| `3b` | قفل دقیقِ `agreed` از هر طرف؛ مازاد آزاد و قابل برداشت | انجام و سبز | 12 |
+| `4a` | `mark_paid` (خریدار؛ فقط اعلام) | انجام و سبز | 10 |
+| `4b` | `mark_shipped` (فروشنده؛ فقط اعلام) | انجام و سبز | 11 |
+| `4c` | زمان رویدادها: `activated_at`، `locked_at`، `paid_at`، `shipped_at` | انجام و سبز | 7 |
+| `5a` | `register_key`: کلید عمومی Ed25519 هر طرف، یک‌بار و با زمان | انجام و سبز | 10 |
+| `5a2` | `rotate_key`: تعویض کلید با زمان و شمارنده (فقط چون پس از 5a اضافه شد این نام را دارد) | انجام و سبز | 11 |
+| `5b` | `message(role)`: پیام امضای ۱۵۵ بایتی با قالب ثابت و بردار تست | انجام و سبز | 9 |
+| `5c` | `verify_code`: بررسی امضا با `ed25519verify_bare` (چیزی ثبت نمی‌کند) | نوشته‌شده؛ در انتظار اجرا روی localnet | 12 (پیش‌بینی) |
+| `5d` | `submit_code`: ثبت کد هر طرف با زمان، یک‌بار برای هر نقش؛ پس از ثبت، کلید امضاکننده قفل می‌شود | برنامه‌ریزی‌شده |  |
+| `5e` | ثبت اینکه کدام طرف قفل را کامل کرد (`locked_by`) برای اعتبارسنجی | پیشنهادی (نیازمند تصمیم) |  |
+| `5f` | log ساختاریافته‌ی `withdraw` (مبلغ، زمان، وضعیت قفل و واریزی طرف مقابل) | پیشنهادی (نیازمند تصمیم) |  |
+| `6a` | `settle`: پس از ثبت هر دو کد، بازگشت وثیقه‌ها و ثبت رکورد نهایی نسخه‌دار در log | برنامه‌ریزی‌شده |  |
+| `6b` | `delete`: فقط پس از تسویه؛ بازگرداندن `APP_FUND` به سازنده | برنامه‌ریزی‌شده |  |
+| `6c` | پاک‌سازی قراردادِ هرگز قفل‌نشده و بدون واریزی | پیشنهادی (نیازمند تصمیم) |  |
+| `7a` | تست خصمانه: کد جعلی و کد قرارداد دیگر، سرتاسری | برنامه‌ریزی‌شده |  |
+| `7b` | تست خصمانه: پیش‌پرداخت به آدرس قرارداد | برنامه‌ریزی‌شده |  |
+| `7c` | تست خصمانه: رقابت دو تراکنش در یک بلوک (گروه) | برنامه‌ریزی‌شده |  |
+| `7d` | تست خصمانه: سوءاستفاده از `settle` و `delete` (زودهنگام، تکراری، بیگانه) | برنامه‌ریزی‌شده |  |
+| `8a` | عدد دقیق `GLOBAL_UINTS` و `GLOBAL_BYTES` در `config.py` | برنامه‌ریزی‌شده |  |
+| `8b` | README نهایی: هش TEAL، هشدار «حسابرسی‌نشده»، تکلیف کلید ناشر قدیمی | برنامه‌ریزی‌شده |  |
+| `8c` | استقرار روی TestNet و تطبیق هش (بدون ذخیره‌ی کلید در فایل) | برنامه‌ریزی‌شده |  |
+| `9a` | رابط: خواندن وضعیت از زنجیره و تطبیق هش برنامه با فهرست نسخه‌های رسمی | برنامه‌ریزی‌شده |  |
+| `9b` | رابط: کلیدها و امضا (ساخت پیام جاوااسکریپت = بردار تست 5b) | برنامه‌ریزی‌شده |  |
+| `9c` | رابط: تراکنش‌ها (ساخت، فعال‌سازی، واریز، برداشت، اعلام‌ها، کدها، تسویه) | برنامه‌ریزی‌شده |  |
+| `9d` | رابط: هشدارها و تأیید سه‌بار، گزارش قابل‌صدور از زنجیره و حافظه‌ی محلی | برنامه‌ریزی‌شده |  |
+| `10a` | راهنمای TestNet برای فروشنده (هر دو حالت: ثبت‌کننده و پذیرنده)، فارسی کامل | برنامه‌ریزی‌شده |  |
+| `10b` | راهنمای TestNet برای خریدار (هر دو حالت)، فارسی کامل | برنامه‌ریزی‌شده |  |
+| `11a` | ابزار خواندن اعتبار از indexer: رکوردهای نهایی، تطبیق هش برنامه، معیارها | برنامه‌ریزی‌شده |  |
+| `11b` | رجیستری اختیاری با box برای خواندن مستقیم از گره | پیشنهادی (نیازمند تصمیم) |  |
 
 هر مرحله فقط چند خط به قرارداد اضافه می‌کند و تست خودش را دارد. مرحله‌ی بعد فقط وقتی شروع می‌شود که تست‌های قبلی سبز باشند.
 
@@ -98,7 +117,7 @@ lmarket/
 
 ### مشکلات شناخته‌شده و کارهای باز
 
-- پس از ۴پ، حافظه‌ی سراسری ۱۳ uint و ۳ بایت دارد (قبل از آن ۹ uint). پس از ۵الف۲: ۱۷ uint و ۵ بایت (`GLOBAL_UINTS` موقتاً ۲۴). `GLOBAL_UINTS` و `GLOBAL_BYTES` در `config.py` فعلاً بزرگ‌تر از نیاز هستند. در پایان باید با عدد دقیق جایگزین شوند، چون هر اسلات اضافه موجودی حداقلِ سازنده را بالا می‌برد.
+- پس از 4c، حافظه‌ی سراسری ۱۳ uint و ۳ بایت دارد (قبل از آن ۹ uint). پس از 5a2: ۱۷ uint و ۵ بایت (`GLOBAL_UINTS` موقتاً ۲۴). `GLOBAL_UINTS` و `GLOBAL_BYTES` در `config.py` فعلاً بزرگ‌تر از نیاز هستند. در پایان باید با عدد دقیق جایگزین شوند، چون هر اسلات اضافه موجودی حداقلِ سازنده را بالا می‌برد.
 - هنوز **تست پیش‌پرداخت به آدرس قرارداد** (قبل از ساخته شدن) و تست رقابت در یک بلوک وجود ندارد؛ در مرحله‌ی ۷ می‌آیند.
 - `index.html` هنوز به زنجیره وصل نیست و به `release.json` و `algosim` قدیمی وابسته است. باید بازنویسی شود و هش TEAL را از زنجیره بخواند.
 - این مخزن حسابرسی امنیتی نشده است. استفاده روی mainnet بدون حسابرسی مستقل ممنوع است.
@@ -322,7 +341,7 @@ Apache License 2.0. فایل `LICENSE` را ببینید.
 
 **Lmarket** is a peer-to-peer trade protocol on Algorand. Two parties who do not trust each other each lock an **equal** amount of collateral. Payment and delivery happen off-chain, and collateral is released only after **both confirmation codes** are recorded.
 
-> **Status of this branch (`decentralized`):** the Python simulator and the publisher signing key have been removed from the tree. The smart contract is being written in PuyaPy and deployed to Algorand (localnet first, then testnet). **This branch does not yet contain the final contract**; it is built stage by stage and only **stage 1 (contract creation)** and **stage 2 (activation with `APP_FUND`)** are done. **Stage 3a (deposit and withdraw before lock)** is also done. **Stage 3b (exact-amount lock)** is also done: once both deposits reach the agreed amount, exactly that amount locks and only the surplus is withdrawable. **Stage 4a (`mark_paid`)** is also done; it is a declaration only and releases nothing. **Stage 4b (`mark_shipped`)** is also done (independent of `mark_paid`, declaration only). **Stage 4c (event timestamps)** is also done. **Stage 5a (Ed25519 public key registration)** **stage 5a2 (key rotation)** and **stage 5b (signing message)** are also done. There is still no confirmation code or settlement. See "Project status" below.
+> **Status of this branch (`decentralized`):** the PuyaPy contract is built stage by stage and **has no final contract yet**. Stages up to `5b` are done and green (116 tests); `5c` is written and awaits a localnet run. The full stage list is under "Stages" and the continuation report is `docs/PROGRESS.md`. Each stage ID equals the branch name (`stage-<id>-…`), the test file (`test_<id>_….py`) and the commit title (`Stage <id>:`).
 
 ### Core ideas
 
@@ -366,28 +385,47 @@ lmarket/
 
 ## Project status (for continuing with another model or developer)
 
-**Last verified state:** on Windows with AlgoKit localnet, `tests/test_00_smoke.py` (8 tests), `tests/test_01_create.py` (16 tests) and `tests/test_02_activate.py` (8 tests) `tests/test_03a_deposit.py` (14 tests) and `tests/test_03b_lock.py` (12 tests) `tests/test_04a_mark_paid.py` (10 tests) and `tests/test_04b_mark_shipped.py` (11 tests) and `tests/test_04c_timestamps.py` (7 tests) and `tests/test_05a_register_key.py` (10 tests) and `tests/test_05a2_rotate_key.py` (11 tests) and `tests/test_05b_message.py` (9 tests) are fully green (116 tests in total; run with `pytest -q`). Approval TEAL sha256 in that run: `db24bb28ff7c72e714c1e3a0960f3b59c34c8703a5151165634091d958f480d4`.
+**Last verified state:** on Windows with AlgoKit localnet, all tests of stages `0` to `5b` are green (116 tests; run with `pytest -q`). Approval TEAL sha256 in that run: `db24bb28ff7c72e714c1e3a0960f3b59c34c8703a5151165634091d958f480d4`. Stage `5c` has not been run yet.
 
 **Versions it worked with:** AlgoKit 2.10.2, puyapy 5.10.1, algorand-python 4.0.0, py-algorand-sdk 2.12.0, pytest 9.2.0, Python **3.12** inside the venv (the global Python is 3.15 and must not be used for this project), algod 5.1.1 on localnet.
 
 ### Stages
 
-| Stage | Content | Status |
-|---|---|---|
-| 0 | Tooling health (algod, accounts, TEAL compile) | done, green |
-| 1 | `create` and input validation, immutable program | done, green |
-| 2 | Activation with the base balance payment (`APP_FUND`) | done, green |
-| 3a | `deposit` and `withdraw` before lock, counterparty deposit visible | done, green |
-| 3b | Exact-amount lock, free and withdrawable surplus | done, green |
-| 4a | `mark_paid` by the buyer | done, green |
-| 4b | `mark_shipped` by the seller | done, green |
-| 4c | record the time of activation, lock, paid and shipped (`activated_at`, `locked_at`, `paid_at`, `shipped_at`); record-only | done, green |
-| 5a | `register_key`: each party's Ed25519 public key, once, with time; record-only | done, green |
-| 5a2 | `rotate_key`, with time and rotation counter; freezing a key after its code is recorded comes in 5d | done, green |
-| 5b | signing message: read-only `message(role)`, fixed 155-byte layout and test vector (`tests/signing_message.py`) | done, green |
-| 5 | Confirmation code as an Ed25519 signature (`ed25519verify_bare`) over a message bound to the app id | |
-| 6 | Settlement and deletion | |
-| 7 | Adversarial tests: forged code, code from another contract, pre-funding the contract address, two transactions racing in one block | |
+| ID | Content | Status | Tests |
+|---|---|---|---|
+| `0` | Tooling health (algod, accounts, TEAL compile) | done, green | 8 |
+| `1` | `create`, input validation, immutable program | done, green | 16 |
+| `2` | `activate` with the `APP_FUND` payment | done, green | 8 |
+| `3a` | `deposit` and `withdraw` before lock, counterparty deposit visible | done, green | 14 |
+| `3b` | Exact `agreed` lock per party; surplus stays free and withdrawable | done, green | 12 |
+| `4a` | `mark_paid` (buyer; declaration only) | done, green | 10 |
+| `4b` | `mark_shipped` (seller; declaration only) | done, green | 11 |
+| `4c` | Event times: `activated_at`, `locked_at`, `paid_at`, `shipped_at` | done, green | 7 |
+| `5a` | `register_key`: each party's Ed25519 public key, once, with time | done, green | 10 |
+| `5a2` | `rotate_key`: replace a key, with time and counter (named 5a2 only because it was inserted after 5a) | done, green | 11 |
+| `5b` | `message(role)`: 155-byte signing message, fixed layout and test vector | done, green | 9 |
+| `5c` | `verify_code`: `ed25519verify_bare` check (records nothing) | written; awaiting localnet run | 12 (expected) |
+| `5d` | `submit_code`: record each party's code with time, once per role; the signer's key freezes afterwards | planned |  |
+| `5e` | Record which party completed the lock (`locked_by`) for reputation | proposed (needs decision) |  |
+| `5f` | Structured `withdraw` log (amount, time, lock state, counterparty deposit) | proposed (needs decision) |  |
+| `6a` | `settle`: after both codes, return collateral and log a versioned final record | planned |  |
+| `6b` | `delete`: only after settlement; return `APP_FUND` to the creator | planned |  |
+| `6c` | Clean-up of a contract that never locked and holds no deposits | proposed (needs decision) |  |
+| `7a` | Adversarial: forged code and code from another contract, end to end | planned |  |
+| `7b` | Adversarial: pre-funding the contract address | planned |  |
+| `7c` | Adversarial: two transactions racing in one block (group) | planned |  |
+| `7d` | Adversarial: abusing `settle` and `delete` (early, repeated, outsider) | planned |  |
+| `8a` | Exact `GLOBAL_UINTS` and `GLOBAL_BYTES` in `config.py` | planned |  |
+| `8b` | Final README: TEAL hash, "unaudited" warning, old publisher key | planned |  |
+| `8c` | TestNet deployment and hash check (no key stored in files) | planned |  |
+| `9a` | UI: read state from chain and match the program hash against the official list | planned |  |
+| `9b` | UI: keys and signing (JavaScript message = 5b test vector) | planned |  |
+| `9c` | UI: transactions (create, activate, deposit, withdraw, declarations, codes, settle) | planned |  |
+| `9d` | UI: warnings with 3 confirmations, exportable log from chain and local cache | planned |  |
+| `10a` | TestNet guide for the seller (both cases: registering and accepting), full Persian | planned |  |
+| `10b` | TestNet guide for the buyer (both cases), full Persian | planned |  |
+| `11a` | Reputation reader over the indexer: final records, program-hash check, metrics | planned |  |
+| `11b` | Optional box-based registry for direct reads from a node | proposed (needs decision) |  |
 
 Each stage adds a few lines to the contract and its own tests. The next stage starts only when the previous tests are green.
 
