@@ -10,7 +10,7 @@
 
 **ال مارکت** یک پروتکل معامله‌ی شخص به شخص روی Algorand است. دو طرفی که به هم اعتماد شخصی ندارند، هر کدام وثیقه‌ای به **مبلغ برابر** قفل می‌کنند. پرداخت و تحویل کالا بیرون از زنجیره انجام می‌شود و وثیقه‌ها فقط پس از ثبت **هر دو کد تأیید** آزاد می‌شوند.
 
-> **وضعیت این شاخه (`decentralized`):** قرارداد PuyaPy مرحله‌به‌مرحله ساخته می‌شود و هنوز **قرارداد نهایی ندارد**. مرحله‌ها تا `5c` انجام و سبز هستند (۱۲۷ تست). فهرست کامل مرحله‌ها در «مرحله‌ها» و گزارش ادامه‌ی کار در `docs/PROGRESS.md` است. هر شناسه‌ی مرحله با نام شاخه (`stage-<شناسه>-…`)، فایل تست (`test_<شناسه>_….py`) و عنوان commit (`Stage <شناسه>:`) یکی است.
+> **وضعیت این شاخه (`decentralized`):** قرارداد PuyaPy مرحله‌به‌مرحله ساخته می‌شود و هنوز **قرارداد نهایی ندارد**. مرحله‌ها تا `5d` انجام و سبز هستند (۱۳۹ تست). فهرست کامل مرحله‌ها در «مرحله‌ها» و گزارش ادامه‌ی کار در `docs/PROGRESS.md` است. هر شناسه‌ی مرحله با نام شاخه (`stage-<شناسه>-…`)، فایل تست (`test_<شناسه>_….py`) و عنوان commit (`Stage <شناسه>:`) یکی است.
 
 ### ایده‌ی اصلی
 
@@ -57,7 +57,7 @@ lmarket/
 
 ## وضعیت پروژه (برای ادامه‌ی کار، حتی با مدل یا توسعه‌دهنده‌ی دیگر)
 
-**آخرین وضعیت تأییدشده:** روی ویندوز با localnet الگوکیت، همه‌ی تست‌های مرحله‌های `0` تا `5c` سبز هستند (۱۲۷ تست؛ اجرا با `pytest -q`). هش TEAL تأییدی در آن اجرا: `2abe3a51d0aa3abedaabf4fcf619e1596b589b54be9a13688b7137a96406ee1e`.
+**آخرین وضعیت تأییدشده:** روی ویندوز با localnet الگوکیت، همه‌ی تست‌های مرحله‌های `0` تا `5d` سبز هستند (۱۳۹ تست؛ اجرا با `pytest -q`). هش TEAL تأییدی در آن اجرا: `f8ccbe48892777a0416baa3d8542ed3fcfb49e49f62ce4e5a8388a042f3505cd`.
 
 **نسخه‌هایی که با آن‌ها کار کرده است:** AlgoKit 2.10.2، puyapy 5.10.1، algorand-python 4.0.0، py-algorand-sdk 2.12.0، pytest 9.2.0، Python **3.12** داخل venv (پایتون سراسری ۳٫۱۵ است و نباید برای پروژه استفاده شود)، algod 5.1.1 روی localnet.
 
@@ -77,7 +77,7 @@ lmarket/
 | `5a2` | `rotate_key`: تعویض کلید با زمان و شمارنده (فقط چون پس از 5a اضافه شد این نام را دارد) | انجام و سبز | 11 |
 | `5b` | `message(role)`: پیام امضای ۱۵۵ بایتی با قالب ثابت و بردار تست | انجام و سبز | 9 |
 | `5c` | `verify_code`: بررسی امضا با `ed25519verify_bare` (چیزی ثبت نمی‌کند) | انجام و سبز | 11 |
-| `5d` | `submit_code`: ثبت کد هر طرف با زمان، یک‌بار برای هر نقش؛ پس از ثبت، کلید امضاکننده قفل می‌شود | نوشته‌شده؛ در انتظار اجرا روی localnet | 12 |
+| `5d` | `submit_code`: ثبت کد هر طرف با زمان، یک‌بار برای هر نقش؛ پس از ثبت، کلید امضاکننده قفل می‌شود | انجام و سبز | 12 |
 | `5e` | ثبت اینکه کدام طرف قفل را کامل کرد (`locked_by`) برای اعتبارسنجی | پیشنهادی (نیازمند تصمیم) |  |
 | `5f` | log ساختاریافته‌ی `withdraw` (مبلغ، زمان، وضعیت قفل و واریزی طرف مقابل) | پیشنهادی (نیازمند تصمیم) |  |
 | `6a` | `settle`: پس از ثبت هر دو کد، بازگشت وثیقه‌ها و ثبت رکورد نهایی نسخه‌دار در log | برنامه‌ریزی‌شده |  |
@@ -344,7 +344,7 @@ Apache License 2.0. فایل `LICENSE` را ببینید.
 
 **Lmarket** is a peer-to-peer trade protocol on Algorand. Two parties who do not trust each other each lock an **equal** amount of collateral. Payment and delivery happen off-chain, and collateral is released only after **both confirmation codes** are recorded.
 
-> **Status of this branch (`decentralized`):** the PuyaPy contract is built stage by stage and **has no final contract yet**. Stages up to `5c` are done and green (127 tests). The full stage list is under "Stages" and the continuation report is `docs/PROGRESS.md`. Each stage ID equals the branch name (`stage-<id>-…`), the test file (`test_<id>_….py`) and the commit title (`Stage <id>:`).
+> **Status of this branch (`decentralized`):** the PuyaPy contract is built stage by stage and **has no final contract yet**. Stages up to `5d` are done and green (139 tests). The full stage list is under "Stages" and the continuation report is `docs/PROGRESS.md`. Each stage ID equals the branch name (`stage-<id>-…`), the test file (`test_<id>_….py`) and the commit title (`Stage <id>:`).
 
 ### Core ideas
 
@@ -391,7 +391,7 @@ lmarket/
 
 ## Project status (for continuing with another model or developer)
 
-**Last verified state:** on Windows with AlgoKit localnet, all tests of stages `0` to `5c` are green (127 tests; run with `pytest -q`). Approval TEAL sha256 in that run: `2abe3a51d0aa3abedaabf4fcf619e1596b589b54be9a13688b7137a96406ee1e`.
+**Last verified state:** on Windows with AlgoKit localnet, all tests of stages `0` to `5d` are green (139 tests; run with `pytest -q`). Approval TEAL sha256 in that run: `f8ccbe48892777a0416baa3d8542ed3fcfb49e49f62ce4e5a8388a042f3505cd`.
 
 **Versions it worked with:** AlgoKit 2.10.2, puyapy 5.10.1, algorand-python 4.0.0, py-algorand-sdk 2.12.0, pytest 9.2.0, Python **3.12** inside the venv (the global Python is 3.15 and must not be used for this project), algod 5.1.1 on localnet.
 
@@ -411,7 +411,7 @@ lmarket/
 | `5a2` | `rotate_key`: replace a key, with time and counter (named 5a2 only because it was inserted after 5a) | done, green | 11 |
 | `5b` | `message(role)`: 155-byte signing message, fixed layout and test vector | done, green | 9 |
 | `5c` | `verify_code`: `ed25519verify_bare` check (records nothing) | done, green | 11 |
-| `5d` | `submit_code`: record each party's code with time, once per role; the signer's key freezes afterwards | written; awaiting localnet run | 12 |
+| `5d` | `submit_code`: record each party's code with time, once per role; the signer's key freezes afterwards | done, green | 12 |
 | `5e` | Record which party completed the lock (`locked_by`) for reputation | proposed (needs decision) |  |
 | `5f` | Structured `withdraw` log (amount, time, lock state, counterparty deposit) | proposed (needs decision) |  |
 | `6a` | `settle`: after both codes, return collateral and log a versioned final record | planned |  |
