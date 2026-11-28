@@ -77,7 +77,7 @@ lmarket/
 | `5a2` | `rotate_key`: تعویض کلید با زمان و شمارنده (فقط چون پس از 5a اضافه شد این نام را دارد) | انجام و سبز | 11 |
 | `5b` | `message(role)`: پیام امضای ۱۵۵ بایتی با قالب ثابت و بردار تست | انجام و سبز | 9 |
 | `5c` | `verify_code`: بررسی امضا با `ed25519verify_bare` (چیزی ثبت نمی‌کند) | انجام و سبز | 11 |
-| `5d` | `submit_code`: ثبت کد هر طرف با زمان، یک‌بار برای هر نقش؛ پس از ثبت، کلید امضاکننده قفل می‌شود | برنامه‌ریزی‌شده |  |
+| `5d` | `submit_code`: ثبت کد هر طرف با زمان، یک‌بار برای هر نقش؛ پس از ثبت، کلید امضاکننده قفل می‌شود | نوشته‌شده؛ در انتظار اجرا روی localnet | 12 |
 | `5e` | ثبت اینکه کدام طرف قفل را کامل کرد (`locked_by`) برای اعتبارسنجی | پیشنهادی (نیازمند تصمیم) |  |
 | `5f` | log ساختاریافته‌ی `withdraw` (مبلغ، زمان، وضعیت قفل و واریزی طرف مقابل) | پیشنهادی (نیازمند تصمیم) |  |
 | `6a` | `settle`: پس از ثبت هر دو کد، بازگشت وثیقه‌ها و ثبت رکورد نهایی نسخه‌دار در log | برنامه‌ریزی‌شده |  |
@@ -411,7 +411,7 @@ lmarket/
 | `5a2` | `rotate_key`: replace a key, with time and counter (named 5a2 only because it was inserted after 5a) | done, green | 11 |
 | `5b` | `message(role)`: 155-byte signing message, fixed layout and test vector | done, green | 9 |
 | `5c` | `verify_code`: `ed25519verify_bare` check (records nothing) | done, green | 11 |
-| `5d` | `submit_code`: record each party's code with time, once per role; the signer's key freezes afterwards | planned |  |
+| `5d` | `submit_code`: record each party's code with time, once per role; the signer's key freezes afterwards | written; awaiting localnet run | 12 |
 | `5e` | Record which party completed the lock (`locked_by`) for reputation | proposed (needs decision) |  |
 | `5f` | Structured `withdraw` log (amount, time, lock state, counterparty deposit) | proposed (needs decision) |  |
 | `6a` | `settle`: after both codes, return collateral and log a versioned final record | planned |  |
