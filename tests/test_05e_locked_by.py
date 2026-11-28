@@ -52,7 +52,7 @@ def test_partial_deposits_the_completing_one_counts(alice, bob):
 
 def test_oversized_first_deposit_does_not_make_that_party_the_locker(alice, bob):
     app = active_app(alice, bob)
-    helpers.deposit(app, alice, 2 * AGREED)                       # آلیس اضافه واریز می‌کند ولی قفل نیست
+    helpers.deposit(app, alice, AGREED + 2 * ALGO)                # آلیس مازاد هم واریز می‌کند ولی قفل نیست (موجودی بیشتر از ۷٫۵ ALGO قابل خرج نیست)
     assert "locked_by" not in helpers.read_state(app)
     helpers.deposit(app, bob, AGREED)
     assert helpers.read_state(app)["locked_by"] == bob.address
