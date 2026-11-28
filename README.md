@@ -10,7 +10,7 @@
 
 **ال مارکت** یک پروتکل معامله‌ی شخص به شخص روی Algorand است. دو طرفی که به هم اعتماد شخصی ندارند، هر کدام وثیقه‌ای به **مبلغ برابر** قفل می‌کنند. پرداخت و تحویل کالا بیرون از زنجیره انجام می‌شود و وثیقه‌ها فقط پس از ثبت **هر دو کد تأیید** آزاد می‌شوند.
 
-> **وضعیت این شاخه (`decentralized`):** قرارداد PuyaPy مرحله‌به‌مرحله ساخته می‌شود و هنوز **قرارداد نهایی ندارد**. مرحله‌ها تا `5b` انجام و سبز هستند (۱۱۶ تست)؛ `5c` نوشته شده و منتظر اجرا روی localnet است. فهرست کامل مرحله‌ها در «مرحله‌ها» و گزارش ادامه‌ی کار در `docs/PROGRESS.md` است. هر شناسه‌ی مرحله با نام شاخه (`stage-<شناسه>-…`)، فایل تست (`test_<شناسه>_….py`) و عنوان commit (`Stage <شناسه>:`) یکی است.
+> **وضعیت این شاخه (`decentralized`):** قرارداد PuyaPy مرحله‌به‌مرحله ساخته می‌شود و هنوز **قرارداد نهایی ندارد**. مرحله‌ها تا `5b` انجام و سبز هستند (۱۱۶ تست)؛ `5c` روی شاخه‌ی `stage-5c-verify` نوشته شده و منتظر اجرا روی localnet است. فهرست کامل مرحله‌ها در «مرحله‌ها» و گزارش ادامه‌ی کار در `docs/PROGRESS.md` است. هر شناسه‌ی مرحله با نام شاخه (`stage-<شناسه>-…`)، فایل تست (`test_<شناسه>_….py`) و عنوان commit (`Stage <شناسه>:`) یکی است.
 
 ### ایده‌ی اصلی
 
@@ -38,14 +38,17 @@
 
 ```
 lmarket/
-├── README.md              # همین فایل
+├── README.md              # همین فایل (فهرست کامل مرحله‌ها در بخش «مرحله‌ها»)
 ├── LICENSE                # Apache-2.0
 ├── .gitignore
-├── index.html             # رابط نمایشی؛ هنوز به زنجیره وصل نیست
-├── contracts/lmarket.py   # قرارداد PuyaPy (مرحله‌ی ۱)
+├── requirements.txt       # puyapy، algorand-python، py-algorand-sdk، pytest
+├── pytest.ini             # فقط tests/ جمع‌آوری می‌شود
 ├── config.py              # همه‌ی تنظیمات (بدون متغیر محیطی)
-├── scripts/               # deploy و ابزارهای کمکی
-├── tests/                 # تست‌های قرارداد روی localnet
+├── contracts/lmarket.py   # قرارداد PuyaPy (مرحله‌به‌مرحله؛ هنوز نهایی نیست)
+├── scripts/build.py       # کامپایل با puyapy و چاپ هش TEAL
+├── tests/                 # test_<شناسه>_….py، helpers.py، signing_message.py (روی localnet)
+├── docs/PROGRESS.md       # گزارش ادامه‌ی کار و تصمیم‌های باز
+├── index.html             # رابط نمایشی؛ هنوز به زنجیره وصل نیست (مرحله‌ی 9)
 ├── build/                 # خروجی puyapy؛ در git نیست
 └── legacy/simulator/      # شبیه‌ساز قدیمی پایتون (فقط آرشیو)
 ```
@@ -341,7 +344,7 @@ Apache License 2.0. فایل `LICENSE` را ببینید.
 
 **Lmarket** is a peer-to-peer trade protocol on Algorand. Two parties who do not trust each other each lock an **equal** amount of collateral. Payment and delivery happen off-chain, and collateral is released only after **both confirmation codes** are recorded.
 
-> **Status of this branch (`decentralized`):** the PuyaPy contract is built stage by stage and **has no final contract yet**. Stages up to `5b` are done and green (116 tests); `5c` is written and awaits a localnet run. The full stage list is under "Stages" and the continuation report is `docs/PROGRESS.md`. Each stage ID equals the branch name (`stage-<id>-…`), the test file (`test_<id>_….py`) and the commit title (`Stage <id>:`).
+> **Status of this branch (`decentralized`):** the PuyaPy contract is built stage by stage and **has no final contract yet**. Stages up to `5b` are done and green (116 tests); `5c` is written on branch `stage-5c-verify` and awaits a localnet run. The full stage list is under "Stages" and the continuation report is `docs/PROGRESS.md`. Each stage ID equals the branch name (`stage-<id>-…`), the test file (`test_<id>_….py`) and the commit title (`Stage <id>:`).
 
 ### Core ideas
 
@@ -369,14 +372,17 @@ Apache License 2.0. فایل `LICENSE` را ببینید.
 
 ```
 lmarket/
-├── README.md              # this file
+├── README.md              # this file (full stage list under "Stages")
 ├── LICENSE                # Apache-2.0
 ├── .gitignore
-├── index.html             # demo UI; not yet connected to the chain
-├── contracts/lmarket.py   # PuyaPy contract (stage 1)
+├── requirements.txt       # puyapy, algorand-python, py-algorand-sdk, pytest
+├── pytest.ini             # only tests/ is collected
 ├── config.py              # all settings (no environment variables)
-├── scripts/               # deployment and helpers
-├── tests/                 # contract tests on localnet
+├── contracts/lmarket.py   # PuyaPy contract (built stage by stage; not final)
+├── scripts/build.py       # compile with puyapy and print the TEAL hash
+├── tests/                 # test_<id>_….py, helpers.py, signing_message.py (on localnet)
+├── docs/PROGRESS.md       # continuation report and open decisions
+├── index.html             # demo UI; not yet connected to the chain (stage 9)
 ├── build/                 # puyapy output; not committed
 └── legacy/simulator/      # archived Python simulator
 ```
