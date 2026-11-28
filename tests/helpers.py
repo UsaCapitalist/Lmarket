@@ -301,6 +301,24 @@ def verify_code(app_id: int, who: Actor, role: int, sig: bytes) -> None:
     atc.execute(c, 4)
 
 
+def submit_code(app_id: int, who: Actor, role: int, sig: bytes) -> None:
+    """مرحله‌ی 5d: ثبت کد تأیید توسط طرف مقابل (آرگومان‌ها: uint8 و byte[])؛ کارمزد ثابت VERIFY_FEE."""
+    c = algod_client()
+    sp = c.suggested_params()
+    sp.flat_fee = True
+    sp.fee = VERIFY_FEE
+    atc = AtomicTransactionComposer()
+    atc.add_method_call(
+        app_id=app_id,
+        method=abi.Method.from_signature("submit_code(uint8,byte[])void"),
+        sender=who.address,
+        sp=sp,
+        signer=who.signer,
+        method_args=[role, sig],
+    )
+    atc.execute(c, 4)
+
+
 WITHDRAW_FEE = 2_000   # کارمزد تراکنش بیرونی + تراکنش داخلی، که فراخواننده می‌پردازد
 
 

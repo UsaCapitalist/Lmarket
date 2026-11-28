@@ -35,6 +35,12 @@ Lmarket — سفته‌ی دیجیتال روی Algorand (PuyaPy)
 بررسی‌شده همیشه با خروجی message() یکی باشد. بودجه‌ی اجرا (۱۹۰۰ واحد برای بررسی امضا) با
 ensure_budget تأمین می‌شود و کارمزد تراکنش‌های کمکی را فراخواننده می‌پردازد (گروه‌اعتبار).
 
+===== مرحله‌ی 5d: ثبت کد تأیید =====
+متد submit_code(role, sig) کد امضاشده‌ی یک طرف را، توسط طرف مقابل، ثبت می‌کند: خریدار کد فروشنده (نقش ۱) و
+فروشنده کد خریدار (نقش ۲) را. امضا با همان بررسی 5c سنجیده می‌شود. هر نقش فقط یک‌بار ثبت می‌شود و فقط
+زمان ثبت می‌ماند (خود امضا نه). ترتیب نسبت به mark_paid و mark_shipped آزاد است. پس از ثبت کد، کلید امضاکننده
+قفل می‌شود (rotate_key رد می‌شود). هنوز هیچ وجهی آزاد نمی‌شود؛ تسویه در 6a می‌آید.
+
 قاعده‌ها (از توافق پروژه):
   * بدون مدیر و بدون امکان به‌روزرسانی.
   * فقط خریدار یا فروشنده می‌تواند قرارداد بسازد.
@@ -101,6 +107,9 @@ class Lmarket(ARC4Contract):
         # تعداد دفعاتی که هر طرف کلیدش را عوض کرده (ثبت اول حساب نمی‌شود)
         self.buyer_key_n = GlobalState(UInt64)
         self.seller_key_n = GlobalState(UInt64)
+        # زمان ثبت کد هر طرف (۰ = هنوز ثبت نشده): seller_code_at = کد فروشنده (نقش ۱)، buyer_code_at = کد خریدار (نقش ۲)
+        self.seller_code_at = GlobalState(UInt64)
+        self.buyer_code_at = GlobalState(UInt64)
 
     @arc4.abimethod(create="require")
     def create(
@@ -140,6 +149,8 @@ class Lmarket(ARC4Contract):
         self.seller_key_at.value = UInt64(0)
         self.buyer_key_n.value = UInt64(0)
         self.seller_key_n.value = UInt64(0)
+        self.seller_code_at.value = UInt64(0)
+        self.buyer_code_at.value = UInt64(0)
 
         log("EVENT:created")
 
@@ -303,12 +314,14 @@ class Lmarket(ARC4Contract):
 
         if Txn.sender == self.buyer.value:
             assert self.buyer_key_at.value != UInt64(0), "key not registered"
+            assert self.buyer_code_at.value == UInt64(0), "key frozen after code"
             assert self.buyer_key.value != key.native, "new key must differ"
             self.buyer_key.value = key.native
             self.buyer_key_at.value = Global.latest_timestamp
             self.buyer_key_n.value += UInt64(1)
         else:
             assert self.seller_key_at.value != UInt64(0), "key not registered"
+            assert self.seller_code_at.value == UInt64(0), "key frozen after code"
             assert self.seller_key.value != key.native, "new key must differ"
             self.seller_key.value = key.native
             self.seller_key_at.value = Global.latest_timestamp
@@ -374,3 +387,28 @@ class Lmarket(ARC4Contract):
         self._verify(role.native, sig.native)
 
         log("EVENT:code_verified")
+
+    @arc4.abimethod
+    def submit_code(self, role: arc4.UInt8, sig: arc4.DynamicBytes) -> None:
+        """
+        ثبت کد تأیید (5d): طرف مقابل کد امضاشده را می‌فرستد؛ خریدار کد فروشنده (نقش ۱) و فروشنده کد خریدار (نقش ۲).
+        فقط یک‌بار برای هر نقش، فقط زمان ثبت می‌شود و هیچ پولی جابه‌جا نمی‌شود. کارمزد باید بودجه‌ی اضافی را بپوشاند.
+        """
+        log("EVENT:submit_code_attempt")
+
+        assert role.native == UInt64(1) or role.native == UInt64(2), "invalid role"
+        if role.native == UInt64(1):
+            assert Txn.sender == self.buyer.value, "only buyer may submit seller code"
+            assert self.seller_code_at.value == UInt64(0), "code already submitted"
+        else:
+            assert Txn.sender == self.seller.value, "only seller may submit buyer code"
+            assert self.buyer_code_at.value == UInt64(0), "code already submitted"
+
+        self._verify(role.native, sig.native)
+
+        if role.native == UInt64(1):
+            self.seller_code_at.value = Global.latest_timestamp
+        else:
+            self.buyer_code_at.value = Global.latest_timestamp
+
+        log("EVENT:code_recorded")
